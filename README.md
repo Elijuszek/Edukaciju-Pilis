@@ -1,9 +1,9 @@
 # T120B165-Web-Application-Design
 
-## Edukacijų ir kitų paslaugų skelbimų sistema
+## Edukacijų Pilis
 
 ### Uždavinio aprašymas
-Skelbimų sistema skirta organizatoriams skelbti skelbimus apie edukacinius renginius.
+Edukaciju Pilis - skelbimų sistema skirta organizatoriams skelbti skelbimus apie edukacinius renginius ir kitas veiklas.
 
 Sistemos paskirtis
 - Patekti informaciją apie vykstančius edukacinius renginius ir veiklas.
@@ -15,9 +15,11 @@ Sistemos paskirtis
 
 1. **Svečio funkcijos:**
     - Peržiūrėti temas
-    - Peržiūrėti edukacijų skelbimus
+    - Peržiūrėti veiklas
+    - Peržiūrėti veiklų atsiliepimus
     - Aktyvuoti naujienlaiškio prenumeratą
-    - Registruotis kaip organizatoriui
+    - Atsisakyti naujienlaiškio prenumeratos
+    - Registruotis kaip vartotojui
 2. **Organizatoriaus funkcijos:**
     - Sukurti temą
     - Paslėpti/Rodyti temą
@@ -28,7 +30,7 @@ Sistemos paskirtis
 3. **Administratoriaus funkcijos:**
     - Patvirtinti temą/skelbimą
     - Pašalinti paskyrą
-    - Patvirtinti naują paskyrą
+    - Sukurti organizatoriaus paskyrą
 
 ### Pasirinktų technologijų aprašymas:
 1. Backend technologijos:
@@ -57,12 +59,18 @@ Sistemos paskirtis
     - Aprašymas
     - Kaina
     - Kontaktai
+3. **Atsiliepimas**
+    - Data
+    - Komentaras
+    - Įvertinimas
+### Hierarchiniai ryšiai
+- Tema/Paketas -> Veikla: viena tema ar paketas gali tūrėti kelias organizuojamas veiklas.
+- Veikla -> Atsiliepimas: viena veikla gali tūrėti kelis parašyus atsiliepimus.
 
 ### Rolės:
-
 - **Svečias**: gali ieškoti skelbimų, aktyvuoti naujienlaiškio prenumeratą.
 - **Vartotojas**: gali palikti atsiliepimus ir įvertinimus apie skelbimus
-- **Organizatorius**: gali skelbti skelbimus ir temas.
+- **Organizatorius**: gali skelbti skelbimus, temas ir sudaryti paketus.
 - **Administratorius**: turi visas valdymo funkcijas, įskaitant vartotojų administravimą, skelbimų ir temų priežiūrą.
 
 ### Klasių diagrama:
@@ -73,8 +81,8 @@ direction LR
 EntityImage "0..*" <-- "1" Image : mapping
 Activity "1" --> "0..*" Location : given
 
-User "1" --> "0..*"  Comment : writes
-Comment "0..*" <-- "1" Activity : hasWritten
+User "1" --> "0..*"  Review : writes
+Review "0..*" <-- "1" Activity : hasWritten
 
 Organizer "1" --> "0..*" Package : creates
 Organizer "1" --> "0..*" Theme : organizes
@@ -130,7 +138,7 @@ class Administrator{
     securityLevel int
 }
 
-class Comment{
+class Review{
     int id
     datetime date
     string comment
