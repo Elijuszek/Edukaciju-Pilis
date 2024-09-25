@@ -2,7 +2,7 @@ package api
 
 import (
 	"database/sql"
-	"educations-castle/service/user"
+	"educations-castle/services/user"
 	"educations-castle/utils/color"
 	"log"
 	"net/http"
@@ -26,7 +26,8 @@ func (s *APIServer) Run() error {
 	router := mux.NewRouter()
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
-	userHandler := user.NewHandler()
+	userCastle := user.NewCastle(s.db)
+	userHandler := user.NewHandler(userCastle)
 	userHandler.RegisterRoutes(subrouter)
 	log.Println(color.Format(color.GREEN, "Listening to "+s.addr))
 

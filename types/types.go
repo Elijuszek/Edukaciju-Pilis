@@ -95,3 +95,19 @@ const (
 	CategoryService   Category = "Service"
 	CategoryOther     Category = "Other"
 )
+
+// Payloads
+
+type RegisterUserPayload struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
+
+// Interfaces
+
+type UserCastle interface {
+	GetUserByEmail(email string) (*User, error)
+	GetUserByID(id int) (*User, error)
+	CreateUser(User) error
+}
