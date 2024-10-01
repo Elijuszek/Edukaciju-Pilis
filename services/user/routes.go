@@ -28,6 +28,17 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// RegisterUser godoc
+// @Summary      Create a new user account
+// @Description  Create a new user by specifying the user information (username, email, password).
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        payload  body      types.RegisterUserPayload  true  "User registration data"
+// @Success      201  {object}   types.UserResponse  "User successfully created"
+// @Failure      400  {object}   types.ErrorResponse "Invalid payload or user already exists"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /users [post]
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
 	if r.Body == nil {

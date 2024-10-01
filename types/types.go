@@ -38,6 +38,7 @@ type Location struct {
 	Fk_ActivityId int      `json:"fk_Activityid"`
 }
 
+// swagger:model
 type User struct {
 	ID               int       `json:"id"`
 	Username         string    `json:"username"`
@@ -98,10 +99,12 @@ const (
 
 // Payloads
 
+// RegisterUserPayload represents the payload for creating a new user.
+// swagger:model
 type RegisterUserPayload struct {
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required,min=3,max=130"`
-	Email    string `json:"email" validate:"required,email"`
+	Username string `json:"username" validate:"required" example:"john_doe"`
+	Email    string `json:"email" validate:"required" example:"john.doe@example.com"`
+	Password string `json:"password" validate:"required" example:"password123"`
 }
 
 // Interfaces
@@ -110,4 +113,23 @@ type UserCastle interface {
 	GetUserByEmail(email string) (*User, error)
 	GetUserByID(id int) (*User, error)
 	CreateUser(User) error
+}
+
+// Responses
+
+// UserResponse represents the response structure for a user.
+// swagger:model
+type UserResponse struct {
+	ID               int       `json:"id" example:"1"`
+	Username         string    `json:"username" example:"john_doe"`
+	Email            string    `json:"email" example:"john.doe@example.com"`
+	RegistrationDate time.Time `json:"registrationDate" example:"2023-10-01T15:04:05Z07:00"`
+	LastLoginDate    time.Time `json:"lastLoginDate" example:"2023-10-01T18:04:05Z07:00"`
+}
+
+// ErrorResponse represents an error response
+// swagger:model
+type ErrorResponse struct {
+	Code    int    `json:"code" example:"400"`
+	Message string `json:"message" example:"Invalid payload or user already exists"`
 }

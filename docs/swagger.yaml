@@ -1,0 +1,79 @@
+definitions:
+  types.ErrorResponse:
+    properties:
+      code:
+        example: 400
+        type: integer
+      message:
+        example: Invalid payload or user already exists
+        type: string
+    type: object
+  types.RegisterUserPayload:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      password:
+        example: password123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  types.UserResponse:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      lastLoginDate:
+        example: 2023-10-01T18:04:05Z07:00
+        type: string
+      registrationDate:
+        example: 2023-10-01T15:04:05Z07:00
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user by specifying the user information (username,
+        email, password).
+      parameters:
+      - description: User registration data
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/types.RegisterUserPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User successfully created
+          schema:
+            $ref: '#/definitions/types.UserResponse'
+        "400":
+          description: Invalid payload or user already exists
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: Create a new user account
+      tags:
+      - users
+swagger: "2.0"
