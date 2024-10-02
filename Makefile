@@ -15,3 +15,4 @@ migrate-up:
 
 migrate-down:
 	@go run cmd/migrate/main.go down
+	
