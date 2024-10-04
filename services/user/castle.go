@@ -1,5 +1,6 @@
 package user
 
+// TODO: Use sqlx
 import (
 	"database/sql"
 	"educations-castle/types"
@@ -12,28 +13,6 @@ type Castle struct {
 
 func NewCastle(db *sql.DB) *Castle {
 	return &Castle{db: db}
-}
-
-// TODO: Use sqlx
-func (s *Castle) GetUserByEmail(email string) (*types.User, error) {
-	rows, err := s.db.Query("SELECT * FROM user WHERE email = ?", email)
-	if err != nil {
-		return nil, err
-	}
-
-	u := new(types.User)
-	for rows.Next() {
-		u, err = scanRowIntoUser(rows)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if u.ID == 0 {
-		return nil, fmt.Errorf("user not found")
-	}
-
-	return u, nil
-
 }
 
 func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
@@ -73,6 +52,27 @@ func (c *Castle) GetUserByID(id int) (*types.User, error) {
 	}
 
 	return u, nil
+}
+
+func (s *Castle) GetUserByEmail(email string) (*types.User, error) {
+	rows, err := s.db.Query("SELECT * FROM user WHERE email = ?", email)
+	if err != nil {
+		return nil, err
+	}
+
+	u := new(types.User)
+	for rows.Next() {
+		u, err = scanRowIntoUser(rows)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if u.ID == 0 {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	return u, nil
+
 }
 
 func (c *Castle) GetUserByUsername(username string) (*types.User, error) {

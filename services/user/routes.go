@@ -1,6 +1,7 @@
 package user
 
 import (
+	"educations-castle/configs"
 	"educations-castle/services/auth"
 	"educations-castle/types"
 	"educations-castle/utils"
@@ -51,18 +52,26 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u, err := h.castle.GetUserByUsername(payload.Username)
-	if err == nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found invalid email or password"))
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found invalid username or password"))
 		return
 	}
 
 	if !auth.ComparePasswords(u.Password, []byte(payload.Password)) {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found invalid email or password"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found invalid username or password"))
 		return
 	}
 
 	// JWT
-	utils.WriteJSON(w, http.StatusOK, map[string]string{"token": ""})
+	secret := []byte(configs.Envs.JWTSecret)
+	token, err := auth.CreateJWT(secret, u.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"token": token})
+
+	//utils.WriteJSON(w, http.StatusOK, map[string]string{"token": ""})
 }
 
 // RegisterUser godoc
