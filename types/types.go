@@ -103,15 +103,21 @@ const (
 // swagger:model
 type RegisterUserPayload struct {
 	Username string `json:"username" validate:"required" example:"john_doe"`
-	Email    string `json:"email" validate:"required" example:"john.doe@example.com"`
+	Password string `json:"password" validate:"required,min=5,max=64" example:"password123"`
+	Email    string `json:"email" validate:"required,email" example:"john.doe@example.com"`
+}
+
+type LoginUserPayload struct {
+	Username string `json:"username" validate:"required" example:"john_doe"`
 	Password string `json:"password" validate:"required" example:"password123"`
 }
 
 // Interfaces
 
 type UserCastle interface {
-	GetUserByEmail(email string) (*User, error)
 	GetUserByID(id int) (*User, error)
+	GetUserByUsername(username string) (*User, error)
+	GetUserByEmail(email string) (*User, error)
 	CreateUser(User) error
 }
 

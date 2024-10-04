@@ -56,9 +56,51 @@ func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 }
 
 func (c *Castle) GetUserByID(id int) (*types.User, error) {
-	return nil, nil
+	rows, err := c.db.Query("SELECT * FROM users WHERE id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	u := new(types.User)
+	for rows.Next() {
+		u, err = scanRowIntoUser(rows)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if u.ID == 0 {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	return u, nil
+}
+
+func (c *Castle) GetUserByUsername(username string) (*types.User, error) {
+	rows, err := c.db.Query("SELECT * FROM user WHERE username = ?", username)
+	if err != nil {
+		return nil, err
+	}
+	u := new(types.User)
+	for rows.Next() {
+		u, err = scanRowIntoUser(rows)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if u.ID == 0 {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	return u, nil
 }
 
 func (c *Castle) CreateUser(user types.User) error {
+	_, err := c.db.Exec("INSERT INTO user (username, password, email) VALUES (?,?,?)", user.Username,
+		user.Password, user.Email)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

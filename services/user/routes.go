@@ -24,8 +24,45 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/register", h.handleRegister).Methods(("POST"))
 }
 
+// RegisterUser godoc
+// @Summary      Login to user account
+// @Description  Login to user account specifying (username, password).
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Param        payload  body      types.LoginUserPayload  true  "User registration data"
+// @Success      201  {object}   types.UserResponse  "User successfully created"
+// @Failure      400  {object}   types.ErrorResponse "Invalid payload or user already exists"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /users [post]
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+	// get JSON payload
+	var payload types.LoginUserPayload
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
 
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+		return
+	}
+
+	u, err := h.castle.GetUserByUsername(payload.Username)
+	if err == nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found invalid email or password"))
+		return
+	}
+
+	if !auth.ComparePasswords(u.Password, []byte(payload.Password)) {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found invalid email or password"))
+		return
+	}
+
+	// JWT
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"token": ""})
 }
 
 // RegisterUser godoc
@@ -41,12 +78,9 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 // @Router       /users [post]
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
-	if r.Body == nil {
-
-	}
 	var payload types.RegisterUserPayload
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+		utils.WriteError(w, http.StatusConflict, err)
 		return
 	}
 
@@ -61,6 +95,12 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	_, err := h.castle.GetUserByEmail(payload.Email)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", payload.Email))
+		return
+	}
+
+	_, err = h.castle.GetUserByUsername(payload.Username)
+	if err == nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with username %s already exists", payload.Username))
 		return
 	}
 

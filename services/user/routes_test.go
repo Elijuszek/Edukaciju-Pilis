@@ -70,12 +70,16 @@ func TestUserServiceHandler(t *testing.T) {
 
 type mockUserCastle struct{}
 
-func (m *mockUserCastle) GetUserByEmail(email string) (*types.User, error) {
+func (m *mockUserCastle) GetUserByID(id int) (*types.User, error) {
+	return nil, nil
+}
+
+func (c *mockUserCastle) GetUserByUsername(username string) (*types.User, error) {
 	return nil, fmt.Errorf("user not found")
 }
 
-func (m *mockUserCastle) GetUserByID(id int) (*types.User, error) {
-	return nil, nil
+func (m *mockUserCastle) GetUserByEmail(email string) (*types.User, error) {
+	return nil, fmt.Errorf("user not found")
 }
 
 func (m *mockUserCastle) CreateUser(types.User) error {
