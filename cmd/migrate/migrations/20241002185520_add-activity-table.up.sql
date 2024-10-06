@@ -9,12 +9,9 @@ CREATE TABLE IF NOT EXISTS `activity` (
    `category` int(11) NOT NULL,
    `averageRating` float NOT NULL DEFAULT 0,
    `fk_Packageid` int(11) NOT NULL,
-   `fk_Themeid` int(11) NOT NULL,
    PRIMARY KEY (`id`),
    KEY `category` (`category`),
    KEY `fk_Packageid` (`fk_Packageid`),
-   KEY `contains` (`fk_Themeid`),
    CONSTRAINT `activity_ibfk_1` FOREIGN KEY (`category`) REFERENCES `category` (`id_Category`),
-   CONSTRAINT `activity_ibfk_2` FOREIGN KEY (`fk_Packageid`) REFERENCES `package` (`id`),
-   CONSTRAINT `contains` FOREIGN KEY (`fk_Themeid`) REFERENCES `theme` (`id`)
+   CONSTRAINT `activity_ibfk_2` FOREIGN KEY (`fk_Packageid`) REFERENCES `package` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

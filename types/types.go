@@ -13,7 +13,6 @@ type Activity struct {
 	Category      string    `json:"category"`
 	AverageRating float32   `json:"averageRating"`
 	Fk_PackageId  int       `json:"fk_Packageid"`
-	Fk_ThemeId    int       `json:"fk_Themeid"`
 }
 
 type Package struct {
@@ -22,12 +21,6 @@ type Package struct {
 	Description    *string `json:"description"`
 	Price          float32 `json:"price"`
 	Fk_OrganizerId int     `json:"fk_Organizerid"`
-}
-
-type Theme struct {
-	ID             int    `json:"id"`
-	Title          string `json:"title"`
-	Fk_OrganizerId int    `json:"fk_Organizerid"`
 }
 
 type Location struct {
@@ -107,18 +100,68 @@ type RegisterUserPayload struct {
 	Email    string `json:"email" validate:"required,email" example:"john.doe@example.com"`
 }
 
+type CreateOrganizerPayload struct {
+	ID          int    `json:"id" validate:"required" example:"123"`
+	Description string `json:"description" validate:"required" example:"organizer"`
+}
+
+// LoginUserPayload represents the payload for logging in existing user.
+// swagger:model
 type LoginUserPayload struct {
 	Username string `json:"username" validate:"required" example:"john_doe"`
 	Password string `json:"password" validate:"required" example:"password123"`
 }
 
-// Interfaces
+// CreateActivityPayload represents the payload for creating activities.
+// swagger:model
+type CreateActivityPayload struct {
+	Name         string  `json:"name" validate:"required" example:"Amber history"`
+	Description  string  `json:"description" validate:"required" example:"Educations about amber"`
+	BasePrice    float32 `json:"basePrice" validate:"required" example:"15.50"`
+	Hidden       bool    `json:"hidden" validate:"required" example:"1"`
+	Category     string  `json:"category" validate:"required" example:"Education"`
+	Fk_PackageId int     `json:"fk_Packageid" validate:"required" example:"1"`
+}
 
+// DeleteActivityPayload represents the payload for creating activities.
+// swagger:model
+type DeleteActivityPayload struct {
+	Name         string `json:"name" validate:"required"`
+	Fk_PackageId int    `json:"fk_PackageId" validate:"required"`
+}
+
+// CreatePackagePayload represents the payload for creating packages.
+// swagger:model
+type PackagePayload struct {
+	Name           string  `json:"name" validate:"required" example:"Amber"`
+	Description    *string `json:"description" validate:"required" example:"Everything about amber"`
+	Price          float32 `json:"price" validate:"required" example:"40"`
+	Fk_OrganizerId int     `json:"fk_Organizerid" validate:"required" example:"1"`
+}
+
+// Interfaces
 type UserCastle interface {
 	GetUserByID(id int) (*User, error)
 	GetUserByUsername(username string) (*User, error)
 	GetUserByEmail(email string) (*User, error)
 	CreateUser(User) error
+	DeleteUser(id int) error
+
+	CreateOrganizer(Organizer) error
+	DeleteOrganizer(id int) error
+
+	DeleteAdministrator(id int) error
+}
+
+type ActivityCastle interface {
+	CreateActivity(Activity) error
+	GetActivityByID(id int) (*Activity, error)
+	UpdateActivity(Activity) error
+	DeleteActivity(id int) error
+	GetActivityInsidePackageByName(activityName string, packageID int) (*Activity, error)
+
+	CreatePackage(Package) error
+	GetPackageByName(name string) (*Package, error)
 }
 
 // Responses

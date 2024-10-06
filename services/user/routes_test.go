@@ -85,3 +85,7 @@ func (m *mockUserCastle) GetUserByEmail(email string) (*types.User, error) {
 func (m *mockUserCastle) CreateUser(types.User) error {
 	return nil
 }
+
+func (m *mockUserCastle) CreateOrganizer(types.Organizer) error {
+	return nil
+}

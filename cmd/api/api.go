@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"educations-castle/services/activity"
 	"educations-castle/services/user"
 	"educations-castle/utils/color"
 	"log"
@@ -29,9 +30,16 @@ func (s *APIServer) Run() error {
 	router := mux.NewRouter()
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
+
+	// User
 	userCastle := user.NewCastle(s.db)
 	userHandler := user.NewHandler(userCastle)
 	userHandler.RegisterRoutes(subrouter)
+
+	// Activity
+	activityCastle := activity.NewCastle(s.db)
+	activityHandler := activity.NewHandler(activityCastle)
+	activityHandler.RegisterRoutes(subrouter)
 	log.Println(color.Format(color.GREEN, "Listening on "+s.addr))
 	return http.ListenAndServe(s.addr, router)
 }

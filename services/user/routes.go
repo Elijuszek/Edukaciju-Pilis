@@ -23,19 +23,22 @@ func NewHandler(castle types.UserCastle) *Handler {
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/login", h.handleLogin).Methods(("POST"))
 	router.HandleFunc("/register", h.handleRegister).Methods(("POST"))
+
+	router.HandleFunc("/delete-user", h.handleDeleteUser).Methods(("POST"))
+	router.HandleFunc("/create-organizer", h.handleCreateOrganizer).Methods(("POST"))
 }
 
-// RegisterUser godoc
+// LoginUser godoc
 // @Summary      Login to user account
 // @Description  Login to user account specifying (username, password).
 // @Tags         user
 // @Accept       json
 // @Produce      json
-// @Param        payload  body      types.LoginUserPayload  true  "User registration data"
-// @Success      201  {object}   types.UserResponse  "User successfully created"
-// @Failure      400  {object}   types.ErrorResponse "Invalid payload or user already exists"
+// @Param        payload  body   types.LoginUserPayload  true  "User login data"
+// @Success      201  {object}   jwt.token  "User successfully loged in"
+// @Failure      400  {object}   types.ErrorResponse "Invalid payload"
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
-// @Router       /users [post]
+// @Router       /users/login [post]
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
 	var payload types.LoginUserPayload
@@ -84,12 +87,12 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 // @Success      201  {object}   types.UserResponse  "User successfully created"
 // @Failure      400  {object}   types.ErrorResponse "Invalid payload or user already exists"
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
-// @Router       /users [post]
+// @Router       /users/register [post]
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
 	var payload types.RegisterUserPayload
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusConflict, err)
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -124,6 +127,84 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		Username: payload.Username,
 		Password: hashedPassword,
 		Email:    payload.Email,
+	})
+
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusCreated, nil)
+}
+
+func (h *Handler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
+	// get JSON payload
+	var payload struct {
+		ID int `json:"id" validate:"required"`
+	}
+
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+		return
+	}
+
+	// delete organizer if exists
+	err := h.castle.DeleteOrganizer(payload.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to delete organizer: %v", err))
+		return
+	}
+
+	// delete administrator if exists
+	err = h.castle.DeleteAdministrator(payload.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to delete administrator: %v", err))
+		return
+	}
+
+	// delete user itself
+	err = h.castle.DeleteUser(payload.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to delete user: %v", err))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("user with name %d successfully deleted", payload.ID))
+}
+
+func (h *Handler) handleCreateOrganizer(w http.ResponseWriter, r *http.Request) {
+	// get JSON payload
+	var payload types.CreateOrganizerPayload
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusConflict, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+		return
+	}
+
+	// check if the user exists
+	_, err := h.castle.GetUserByID(payload.ID)
+	if err == nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with id %d doesn't exists", payload.ID))
+		return
+	}
+
+	// if it doesnt  create the new user
+	err = h.castle.CreateOrganizer(types.Organizer{
+		ID:          payload.ID,
+		Description: &payload.Description,
 	})
 
 	if err != nil {

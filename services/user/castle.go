@@ -104,3 +104,43 @@ func (c *Castle) CreateUser(user types.User) error {
 
 	return nil
 }
+
+func (c *Castle) DeleteUser(id int) error {
+	_, err := c.db.Exec(
+		"DELETE FROM user WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Castle) CreateOrganizer(organizer types.Organizer) error {
+	_, err := c.db.Exec("INSERT INTO organizer (id, description) VALUES (?,?)", organizer.ID,
+		organizer.Description)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Castle) DeleteOrganizer(id int) error {
+	_, err := c.db.Exec(
+		"DELETE FROM organizer WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Castle) DeleteAdministrator(id int) error {
+	_, err := c.db.Exec(
+		"DELETE FROM administrator WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
