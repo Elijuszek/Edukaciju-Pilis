@@ -24,7 +24,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/login", h.handleLogin).Methods(("POST"))
 	router.HandleFunc("/register", h.handleRegister).Methods(("POST"))
 
-	router.HandleFunc("/delete-user", h.handleDeleteUser).Methods(("POST"))
+	router.HandleFunc("/delete-user", h.handleDeleteUser).Methods(("DELETE"))
 	router.HandleFunc("/create-organizer", h.handleCreateOrganizer).Methods(("POST"))
 }
 
@@ -155,28 +155,15 @@ func (h *Handler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// delete organizer if exists
-	err := h.castle.DeleteOrganizer(payload.ID)
+	// delete user
+	err := h.castle.DeleteUser(payload.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to delete organizer: %v", err))
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to delete user: %d", err))
 		return
 	}
 
-	// delete administrator if exists
-	err = h.castle.DeleteAdministrator(payload.ID)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to delete administrator: %v", err))
-		return
-	}
-
-	// delete user itself
-	err = h.castle.DeleteUser(payload.ID)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to delete user: %v", err))
-		return
-	}
-
-	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("user with name %d successfully deleted", payload.ID))
+	// TODO: status NO content
+	utils.WriteJSON(w, http.StatusAccepted, fmt.Sprintf("user with id %d successfully deleted", payload.ID))
 }
 
 func (h *Handler) handleCreateOrganizer(w http.ResponseWriter, r *http.Request) {

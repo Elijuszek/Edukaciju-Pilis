@@ -124,23 +124,3 @@ func (c *Castle) CreateOrganizer(organizer types.Organizer) error {
 
 	return nil
 }
-
-func (c *Castle) DeleteOrganizer(id int) error {
-	_, err := c.db.Exec(
-		"DELETE FROM organizer WHERE id = ?", id)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *Castle) DeleteAdministrator(id int) error {
-	_, err := c.db.Exec(
-		"DELETE FROM administrator WHERE id = ?", id)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}

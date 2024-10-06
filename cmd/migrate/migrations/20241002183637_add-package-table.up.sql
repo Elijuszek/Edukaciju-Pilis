@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS `package` (
   `fk_Organizerid` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `creates` (`fk_Organizerid`),
-  CONSTRAINT `creates` FOREIGN KEY (`fk_Organizerid`) REFERENCES `organizer` (`id`)
+  CONSTRAINT `creates` FOREIGN KEY (`fk_Organizerid`) REFERENCES `organizer` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

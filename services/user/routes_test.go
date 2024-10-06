@@ -89,3 +89,7 @@ func (m *mockUserCastle) CreateUser(types.User) error {
 func (m *mockUserCastle) CreateOrganizer(types.Organizer) error {
 	return nil
 }
+
+func (m *mockUserCastle) DeleteUser(id int) error {
+	return nil
+}

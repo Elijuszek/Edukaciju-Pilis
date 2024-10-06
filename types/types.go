@@ -148,9 +148,6 @@ type UserCastle interface {
 	DeleteUser(id int) error
 
 	CreateOrganizer(Organizer) error
-	DeleteOrganizer(id int) error
-
-	DeleteAdministrator(id int) error
 }
 
 type ActivityCastle interface {
@@ -161,6 +158,7 @@ type ActivityCastle interface {
 	GetActivityInsidePackageByName(activityName string, packageID int) (*Activity, error)
 
 	CreatePackage(Package) error
+	DeletePackage(id int) error
 	GetPackageByName(name string) (*Package, error)
 }
 

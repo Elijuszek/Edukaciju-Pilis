@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS `activity` (
    KEY `category` (`category`),
    KEY `fk_Packageid` (`fk_Packageid`),
    CONSTRAINT `activity_ibfk_1` FOREIGN KEY (`category`) REFERENCES `category` (`id_Category`),
-   CONSTRAINT `activity_ibfk_2` FOREIGN KEY (`fk_Packageid`) REFERENCES `package` (`id`)
+   CONSTRAINT `activity_ibfk_2` FOREIGN KEY (`fk_Packageid`) REFERENCES `package` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

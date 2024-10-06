@@ -121,6 +121,20 @@ func (c *Castle) DeleteActivity(id int) error {
 	return nil
 }
 
+func (c *Castle) UpdateActivity(activity types.Activity) error {
+	_, err := c.db.Exec(
+		`UPDATE activity 
+		SET name = ?, description = ?, basePrice = ?, hidden = ?, category = ?, fk_Packageid = ? 
+		WHERE id = ?`,
+		activity.Name, activity.Description, activity.BasePrice, activity.Hidden, activity.Category,
+		activity.Fk_PackageId, activity.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Castle) CreatePackage(p types.Package) error {
 	_, err := c.db.Exec(
 		"INSERT INTO package (name, description, price, fk_Organizerid) VALUES (?,?,?,?)",
@@ -152,13 +166,9 @@ func (c *Castle) GetPackageByName(name string) (*types.Package, error) {
 	return p, nil
 }
 
-func (c *Castle) UpdateActivity(activity types.Activity) error {
+func (c *Castle) DeletePackage(id int) error {
 	_, err := c.db.Exec(
-		`UPDATE activity 
-		SET name = ?, description = ?, basePrice = ?, hidden = ?, category = ?, fk_Packageid = ? 
-		WHERE id = ?`,
-		activity.Name, activity.Description, activity.BasePrice, activity.Hidden, activity.Category,
-		activity.Fk_PackageId, activity.ID)
+		"DELETE FROM package WHERE id = ?", id)
 	if err != nil {
 		return err
 	}
