@@ -112,9 +112,9 @@ type LoginUserPayload struct {
 	Password string `json:"password" validate:"required" example:"password123"`
 }
 
-// CreateActivityPayload represents the payload for creating activities.
+// ActivityPayload represents the payload for creating activities and updating them.
 // swagger:model
-type CreateActivityPayload struct {
+type ActivityPayload struct {
 	Name        string  `json:"name" validate:"required" example:"Amber history"`
 	Description string  `json:"description" validate:"required" example:"Educations about amber"`
 	BasePrice   float32 `json:"basePrice" validate:"required" example:"15.50"`
@@ -139,20 +139,13 @@ type CreatePackagePayload struct {
 	FkOrganizerID int     `json:"fk_Organizerid" validate:"required" example:"1"`
 }
 
-// CreateReviewPayload represents the payload for creating reviews.
+// ReviewPayload represents the payload for creating reviews and updating them.
 // swagger:model
-type CreateReviewPayload struct {
+type ReviewPayload struct {
 	Comment      string `json:"comment" validate:"required" example:"Very nice education"`
 	Rating       int    `json:"rating" validate:"required,min=1,max=5" example:"5"`
 	FkUserID     int    `json:"fk_Userid" validate:"required" example:"1"`
 	FkActivityID int    `json:"fk_Activityid" validate:"required" example:"1"`
-}
-
-// UpdateReviewPayload represents the payload for updating reviews.
-// swagger:model
-type UpdateReviewPayload struct {
-	Comment string `json:"comment" validate:"required"`
-	Rating  int    `json:"rating" validate:"required,gte=0,lte=5"` // Example validation for rating
 }
 
 // Interfaces
@@ -174,6 +167,7 @@ type ActivityCastle interface {
 	UpdateActivity(Activity) error
 	DeleteActivity(id int) error
 	GetActivityInsidePackageByName(activityName string, packageID int) (*Activity, error)
+	ListActivities() ([]*Activity, error)
 
 	CreatePackage(Package) error
 	DeletePackage(id int) error

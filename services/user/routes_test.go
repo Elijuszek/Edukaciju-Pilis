@@ -86,10 +86,18 @@ func (m *mockUserCastle) CreateUser(types.User) error {
 	return nil
 }
 
-func (m *mockUserCastle) CreateOrganizer(types.Organizer) error {
+func (m *mockUserCastle) UpdateUser(types.User) error {
 	return nil
 }
 
 func (m *mockUserCastle) DeleteUser(id int) error {
+	return nil
+}
+
+func (m *mockUserCastle) ListUsers() ([]*types.User, error) {
+	return nil, nil
+}
+
+func (m *mockUserCastle) CreateOrganizer(types.Organizer) error {
 	return nil
 }

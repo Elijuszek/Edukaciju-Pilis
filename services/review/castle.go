@@ -110,8 +110,8 @@ func (c *Castle) CreateReview(review types.Review) error {
 
 func (c *Castle) UpdateReview(review types.Review) error {
 	_, err := c.db.Exec(
-		"UPDATE review SET date = ?, comment = ?, rating = ?, fk_Userid = ?, fk_Activityid = ? WHERE id = ?",
-		review.Date, review.Comment, review.Rating, review.FkUserID, review.FkActivityID, review.ID,
+		"UPDATE review SET comment = ?, rating = ?, fk_Userid = ?, fk_Activityid = ? WHERE id = ?",
+		review.Comment, review.Rating, review.FkUserID, review.FkActivityID, review.ID,
 	)
 	if err != nil {
 		return err

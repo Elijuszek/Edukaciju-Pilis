@@ -20,6 +20,7 @@ func scanRowIntoActivity(rows *sql.Rows) (*types.Activity, error) {
 	err := rows.Scan(
 		&activity.ID,
 		&activity.Name,
+		&activity.Description,
 		&activity.BasePrice,
 		&activity.CreationDate,
 		&activity.Hidden,
@@ -54,6 +55,30 @@ func scanRowIntoPackage(rows *sql.Rows) (*types.Package, error) {
 	return p, nil
 }
 
+func (c *Castle) ListActivities() ([]*types.Activity, error) {
+	rows, err := c.db.Query("SELECT * FROM activity")
+	if err != nil {
+		return nil, err
+	}
+
+	var activity []*types.Activity
+
+	for rows.Next() {
+		r := new(types.Activity)
+		r, err = scanRowIntoActivity(rows)
+		if err != nil {
+			return nil, err
+		}
+		activity = append(activity, r)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return activity, nil
+}
+
 func (c *Castle) CreateActivity(activity types.Activity) error {
 	var categoryID int
 	err := c.db.QueryRow("SELECT id_Category FROM category WHERE name = ?", activity.Category).Scan(&categoryID)
@@ -85,7 +110,7 @@ func (c *Castle) GetActivityByID(id int) (*types.Activity, error) {
 	}
 
 	if a.ID == 0 {
-		return nil, fmt.Errorf("activity not found")
+		return nil, sql.ErrNoRows
 	}
 
 	return a, nil
@@ -111,9 +136,18 @@ func (c *Castle) GetActivityInsidePackageByName(activityName string, packageID i
 	return a, nil
 }
 
-func (c *Castle) DeleteActivity(id int) error {
-	_, err := c.db.Exec(
-		"DELETE FROM activity WHERE id = ?", id)
+func (c *Castle) UpdateActivity(activity types.Activity) error {
+	var categoryID int
+	err := c.db.QueryRow("SELECT id_Category FROM category WHERE name = ?", activity.Category).Scan(&categoryID)
+	if err != nil {
+		return fmt.Errorf("failed to find category '%s': %v", activity.Category, err)
+	}
+	_, err = c.db.Exec(
+		`UPDATE activity 
+		SET name = ?, description = ?, basePrice = ?, hidden = ?, category = ?, fk_Packageid = ? 
+		WHERE id = ?`,
+		activity.Name, activity.Description, activity.BasePrice, activity.Hidden, categoryID,
+		activity.FkPackageID, activity.ID)
 	if err != nil {
 		return err
 	}
@@ -121,13 +155,9 @@ func (c *Castle) DeleteActivity(id int) error {
 	return nil
 }
 
-func (c *Castle) UpdateActivity(activity types.Activity) error {
+func (c *Castle) DeleteActivity(id int) error {
 	_, err := c.db.Exec(
-		`UPDATE activity 
-		SET name = ?, description = ?, basePrice = ?, hidden = ?, category = ?, fk_Packageid = ? 
-		WHERE id = ?`,
-		activity.Name, activity.Description, activity.BasePrice, activity.Hidden, activity.Category,
-		activity.FkPackageID, activity.ID)
+		"DELETE FROM activity WHERE id = ?", id)
 	if err != nil {
 		return err
 	}

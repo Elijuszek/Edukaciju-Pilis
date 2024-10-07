@@ -47,7 +47,7 @@ func (h *Handler) handleListReviews(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleCreateReview(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
-	var payload types.CreateReviewPayload
+	var payload types.ReviewPayload
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
@@ -63,7 +63,7 @@ func (h *Handler) handleCreateReview(w http.ResponseWriter, r *http.Request) {
 	// check if the review exists
 	_, err := h.castle.GetReviewFromActivityByID(payload.FkActivityID, payload.FkUserID)
 	if err == nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("review from same user: %s already exists", payload.Comment))
+		utils.WriteError(w, http.StatusUnprocessableEntity, fmt.Errorf("review from same user: %s already exists", payload.Comment))
 		return
 	}
 
@@ -109,21 +109,21 @@ func (h *Handler) handleGetReview(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) handleUpdateReview(w http.ResponseWriter, r *http.Request) {
 	// Get the review ID from the URL parameters
 	vars := mux.Vars(r)
-	reviewIDStr, ok := vars["reviewID"]
+	str, ok := vars["reviewID"]
 	if !ok {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing review ID"))
 		return
 	}
 
 	// Convert review ID from string to int
-	reviewID, err := strconv.Atoi(reviewIDStr)
+	reviewID, err := strconv.Atoi(str)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid review ID"))
 		return
 	}
 
 	// Get JSON payload
-	var payload types.UpdateReviewPayload
+	var payload types.ReviewPayload
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
