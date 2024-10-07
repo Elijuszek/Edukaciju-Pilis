@@ -34,6 +34,30 @@ func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 	return user, nil
 }
 
+func (c *Castle) ListUsers() ([]*types.User, error) {
+	rows, err := c.db.Query("SELECT * FROM user")
+	if err != nil {
+		return nil, err
+	}
+
+	var users []*types.User
+
+	for rows.Next() {
+		r := new(types.User)
+		r, err = scanRowIntoUser(rows)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, r)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
 func (c *Castle) GetUserByID(id int) (*types.User, error) {
 	rows, err := c.db.Query("SELECT * FROM user WHERE id = ?", id)
 	if err != nil {
@@ -48,7 +72,7 @@ func (c *Castle) GetUserByID(id int) (*types.User, error) {
 	}
 
 	if u.ID == 0 {
-		return nil, fmt.Errorf("user not found")
+		return nil, sql.ErrNoRows
 	}
 
 	return u, nil
@@ -108,6 +132,18 @@ func (c *Castle) CreateUser(user types.User) error {
 func (c *Castle) DeleteUser(id int) error {
 	_, err := c.db.Exec(
 		"DELETE FROM user WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Castle) UpdateUser(user types.User) error {
+	_, err := c.db.Exec(
+		"UPDATE user SET username = ?, password = ?, email = ?, registrationDate = ?, lastLoginDate = ? WHERE id = ?",
+		user.Username, user.Password, user.Email, user.RegistrationDate, user.LastLoginDate, user.ID,
+	)
 	if err != nil {
 		return err
 	}

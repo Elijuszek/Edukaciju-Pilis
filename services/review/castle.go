@@ -33,6 +33,7 @@ func scanRowIntoReview(rows *sql.Rows) (*types.Review, error) {
 
 	return r, nil
 }
+
 func (c *Castle) ListReviews() ([]*types.Review, error) {
 	rows, err := c.db.Query("SELECT * FROM review")
 	if err != nil {

@@ -92,9 +92,9 @@ const (
 
 // Payloads
 
-// RegisterUserPayload represents the payload for creating a new user.
+// UserPayload represents the payload for creating a new user and updating information.
 // swagger:model
-type RegisterUserPayload struct {
+type UserPayload struct {
 	Username string `json:"username" validate:"required" example:"john_doe"`
 	Password string `json:"password" validate:"required,min=5,max=64" example:"password123"`
 	Email    string `json:"email" validate:"required,email" example:"john.doe@example.com"`
@@ -161,7 +161,9 @@ type UserCastle interface {
 	GetUserByUsername(username string) (*User, error)
 	GetUserByEmail(email string) (*User, error)
 	CreateUser(User) error
+	UpdateUser(User) error
 	DeleteUser(id int) error
+	ListUsers() ([]*User, error)
 
 	CreateOrganizer(Organizer) error
 }

@@ -18,7 +18,7 @@ func TestUserServiceHandler(t *testing.T) {
 	handler := NewHandler(userCastle)
 
 	t.Run("Should fail if the user payload is invalid", func(*testing.T) {
-		payload := types.RegisterUserPayload{
+		payload := types.UserPayload{
 			Username: "user",
 			Password: "password",
 			Email:    "invalid",
@@ -43,7 +43,7 @@ func TestUserServiceHandler(t *testing.T) {
 	})
 
 	t.Run("Should correctly register the user", func(t *testing.T) {
-		payload := types.RegisterUserPayload{
+		payload := types.UserPayload{
 			Username: "user",
 			Password: "password",
 			Email:    "validUser@email.com",
