@@ -55,19 +55,19 @@ func (h *Handler) handleCreateActivity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the activity exists inside package
-	_, err := h.castle.GetActivityInsidePackageByName(payload.Name, payload.Fk_PackageId)
+	_, err := h.castle.GetActivityInsidePackageByName(payload.Name, payload.FkPackageID)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("activity with name %s inside package already exists", payload.Name))
 		return
 	}
 
 	err = h.castle.CreateActivity(types.Activity{
-		Name:         payload.Name,
-		Description:  payload.Description,
-		BasePrice:    payload.BasePrice,
-		Hidden:       payload.Hidden,
-		Category:     payload.Category,
-		Fk_PackageId: payload.Fk_PackageId,
+		Name:        payload.Name,
+		Description: payload.Description,
+		BasePrice:   payload.BasePrice,
+		Hidden:      payload.Hidden,
+		Category:    payload.Category,
+		FkPackageID: payload.FkPackageID,
 	})
 
 	if err != nil {
@@ -120,7 +120,7 @@ func (h *Handler) handleDeleteActivity(w http.ResponseWriter, r *http.Request) {
 // @Router       /users/register [post]
 func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
-	var payload types.PackagePayload
+	var payload types.CreatePackagePayload
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
@@ -142,10 +142,10 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 
 	// if not create
 	err = h.castle.CreatePackage(types.Package{
-		Name:           payload.Name,
-		Description:    payload.Description,
-		Price:          payload.Price,
-		Fk_OrganizerId: payload.Fk_OrganizerId,
+		Name:          payload.Name,
+		Description:   payload.Description,
+		Price:         payload.Price,
+		FkOrganizerID: payload.FkOrganizerID,
 	})
 
 	if err != nil {

@@ -26,7 +26,7 @@ func scanRowIntoActivity(rows *sql.Rows) (*types.Activity, error) {
 		&activity.Verified,
 		&activity.Category,
 		&activity.AverageRating,
-		&activity.Fk_PackageId,
+		&activity.FkPackageID,
 	)
 
 	if err != nil {
@@ -44,7 +44,7 @@ func scanRowIntoPackage(rows *sql.Rows) (*types.Package, error) {
 		&p.Name,
 		&p.Description,
 		&p.Price,
-		&p.Fk_OrganizerId,
+		&p.FkOrganizerID,
 	)
 
 	if err != nil {
@@ -63,7 +63,7 @@ func (c *Castle) CreateActivity(activity types.Activity) error {
 
 	_, err = c.db.Exec(
 		"INSERT INTO activity (name, description, basePrice, hidden, category, fk_Packageid) VALUES (?,?,?,?,?,?)",
-		activity.Name, activity.Description, activity.BasePrice, activity.Hidden, categoryID, activity.Fk_PackageId)
+		activity.Name, activity.Description, activity.BasePrice, activity.Hidden, categoryID, activity.FkPackageID)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (c *Castle) UpdateActivity(activity types.Activity) error {
 		SET name = ?, description = ?, basePrice = ?, hidden = ?, category = ?, fk_Packageid = ? 
 		WHERE id = ?`,
 		activity.Name, activity.Description, activity.BasePrice, activity.Hidden, activity.Category,
-		activity.Fk_PackageId, activity.ID)
+		activity.FkPackageID, activity.ID)
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func (c *Castle) UpdateActivity(activity types.Activity) error {
 func (c *Castle) CreatePackage(p types.Package) error {
 	_, err := c.db.Exec(
 		"INSERT INTO package (name, description, price, fk_Organizerid) VALUES (?,?,?,?)",
-		p.Name, p.Description, p.Price, p.Fk_OrganizerId)
+		p.Name, p.Description, p.Price, p.FkOrganizerID)
 	if err != nil {
 		return err
 	}

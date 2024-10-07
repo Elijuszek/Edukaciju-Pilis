@@ -12,23 +12,23 @@ type Activity struct {
 	Verified      bool      `json:"verified"`
 	Category      string    `json:"category"`
 	AverageRating float32   `json:"averageRating"`
-	Fk_PackageId  int       `json:"fk_Packageid"`
+	FkPackageID   int       `json:"fk_Packageid"`
 }
 
 type Package struct {
-	ID             int     `json:"id"`
-	Name           string  `json:"name"`
-	Description    *string `json:"description"`
-	Price          float32 `json:"price"`
-	Fk_OrganizerId int     `json:"fk_Organizerid"`
+	ID            int     `json:"id"`
+	Name          string  `json:"name"`
+	Description   string  `json:"description"`
+	Price         float32 `json:"price"`
+	FkOrganizerID int     `json:"fk_Organizerid"`
 }
 
 type Location struct {
-	ID            int      `json:"id"`
-	Address       string   `json:"address"`
-	Longitude     *float64 `json:"longitude"`
-	Latitude      *float64 `json:"latitude"`
-	Fk_ActivityId int      `json:"fk_Activityid"`
+	ID           int     `json:"id"`
+	Address      string  `json:"address"`
+	Longitude    float64 `json:"longitude"`
+	Latitude     float64 `json:"latitude"`
+	FkActivityID int     `json:"fk_Activityid"`
 }
 
 // swagger:model
@@ -46,8 +46,8 @@ type Review struct {
 	Date         time.Time `json:"date"`
 	Comment      *string   `json:"comment"`
 	Rating       int       `json:"rating"`
-	FkUserId     int       `json:"fk_Userid"`
-	FkActivityId int       `json:"fk_Activityid"`
+	FkUserID     int       `json:"fk_Userid"`
+	FkActivityID int       `json:"fk_Activityid"`
 }
 
 type Administrator struct {
@@ -78,7 +78,7 @@ type EntityImage struct {
 	ID         int    `json:"id"`
 	EntityType string `json:"entityType"`
 	FkEntity   int    `json:"fk_entity"`
-	FkImageId  int    `json:"fk_Imageid"`
+	FkImageID  int    `json:"fk_Imageid"`
 }
 
 type Category string
@@ -115,28 +115,44 @@ type LoginUserPayload struct {
 // CreateActivityPayload represents the payload for creating activities.
 // swagger:model
 type CreateActivityPayload struct {
-	Name         string  `json:"name" validate:"required" example:"Amber history"`
-	Description  string  `json:"description" validate:"required" example:"Educations about amber"`
-	BasePrice    float32 `json:"basePrice" validate:"required" example:"15.50"`
-	Hidden       bool    `json:"hidden" validate:"required" example:"1"`
-	Category     string  `json:"category" validate:"required" example:"Education"`
-	Fk_PackageId int     `json:"fk_Packageid" validate:"required" example:"1"`
+	Name        string  `json:"name" validate:"required" example:"Amber history"`
+	Description string  `json:"description" validate:"required" example:"Educations about amber"`
+	BasePrice   float32 `json:"basePrice" validate:"required" example:"15.50"`
+	Hidden      bool    `json:"hidden" validate:"required" example:"1"`
+	Category    string  `json:"category" validate:"required" example:"Education"`
+	FkPackageID int     `json:"fk_Packageid" validate:"required" example:"1"`
 }
 
 // DeleteActivityPayload represents the payload for creating activities.
 // swagger:model
 type DeleteActivityPayload struct {
-	Name         string `json:"name" validate:"required"`
-	Fk_PackageId int    `json:"fk_PackageId" validate:"required"`
+	Name        string `json:"name" validate:"required"`
+	FkPackageID int    `json:"fk_PackageId" validate:"required"`
 }
 
 // CreatePackagePayload represents the payload for creating packages.
 // swagger:model
-type PackagePayload struct {
-	Name           string  `json:"name" validate:"required" example:"Amber"`
-	Description    *string `json:"description" validate:"required" example:"Everything about amber"`
-	Price          float32 `json:"price" validate:"required" example:"40"`
-	Fk_OrganizerId int     `json:"fk_Organizerid" validate:"required" example:"1"`
+type CreatePackagePayload struct {
+	Name          string  `json:"name" validate:"required" example:"Amber"`
+	Description   string  `json:"description" validate:"required" example:"Everything about amber"`
+	Price         float32 `json:"price" validate:"required" example:"40"`
+	FkOrganizerID int     `json:"fk_Organizerid" validate:"required" example:"1"`
+}
+
+// CreateReviewPayload represents the payload for creating reviews.
+// swagger:model
+type CreateReviewPayload struct {
+	Comment      string `json:"comment" validate:"required" example:"Very nice education"`
+	Rating       int    `json:"rating" validate:"required,min=1,max=5" example:"5"`
+	FkUserID     int    `json:"fk_Userid" validate:"required" example:"1"`
+	FkActivityID int    `json:"fk_Activityid" validate:"required" example:"1"`
+}
+
+// UpdateReviewPayload represents the payload for updating reviews.
+// swagger:model
+type UpdateReviewPayload struct {
+	Comment string `json:"comment" validate:"required"`
+	Rating  int    `json:"rating" validate:"required,gte=0,lte=5"` // Example validation for rating
 }
 
 // Interfaces
@@ -160,6 +176,16 @@ type ActivityCastle interface {
 	CreatePackage(Package) error
 	DeletePackage(id int) error
 	GetPackageByName(name string) (*Package, error)
+}
+
+type ReviewCastle interface {
+	CreateReview(Review) error
+	GetReviewByID(id int) (*Review, error)
+	UpdateReview(Review) error
+	DeleteReviewByID(id int) error
+	ListReviews() ([]*Review, error)
+
+	GetReviewFromActivityByID(idActivity int, idUser int) (*Review, error)
 }
 
 // Responses

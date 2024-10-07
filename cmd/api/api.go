@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"educations-castle/services/activity"
+	"educations-castle/services/review"
 	"educations-castle/services/user"
 	"educations-castle/utils/color"
 	"log"
@@ -40,6 +41,12 @@ func (s *APIServer) Run() error {
 	activityCastle := activity.NewCastle(s.db)
 	activityHandler := activity.NewHandler(activityCastle)
 	activityHandler.RegisterRoutes(subrouter)
+
+	// Review
+	reviewCastle := review.NewCastle(s.db)
+	reviewHandler := review.NewHandler(reviewCastle)
+	reviewHandler.RegisterRoutes(subrouter)
+
 	log.Println(color.Format(color.GREEN, "Listening on "+s.addr))
 	return http.ListenAndServe(s.addr, router)
 }

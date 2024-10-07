@@ -183,7 +183,7 @@ func (h *Handler) handleCreateOrganizer(w http.ResponseWriter, r *http.Request) 
 
 	// check if the user exists
 	_, err := h.castle.GetUserByID(payload.ID)
-	if err == nil {
+	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with id %d doesn't exists", payload.ID))
 		return
 	}

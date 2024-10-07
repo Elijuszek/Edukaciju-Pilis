@@ -35,7 +35,7 @@ func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 }
 
 func (c *Castle) GetUserByID(id int) (*types.User, error) {
-	rows, err := c.db.Query("SELECT * FROM users WHERE id = ?", id)
+	rows, err := c.db.Query("SELECT * FROM user WHERE id = ?", id)
 	if err != nil {
 		return nil, err
 	}
