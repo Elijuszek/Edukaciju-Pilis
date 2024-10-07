@@ -79,8 +79,6 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"token": token})
-
-	//utils.WriteJSON(w, http.StatusOK, map[string]string{"token": ""})
 }
 
 // RegisterUser godoc
@@ -140,7 +138,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, nil)
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("User %s successfully registered", payload.Username))
 }
 
 func (h *Handler) handleListUsers(w http.ResponseWriter, r *http.Request) {
@@ -297,7 +295,6 @@ func (h *Handler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: status NO content
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("user with id %d successfully deleted", userID))
 }
 
@@ -305,7 +302,7 @@ func (h *Handler) handleCreateOrganizer(w http.ResponseWriter, r *http.Request) 
 	// get JSON payload
 	var payload types.CreateOrganizerPayload
 	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusConflict, err)
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -317,9 +314,10 @@ func (h *Handler) handleCreateOrganizer(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// check if the user exists
+	// TODO: check if organizer already exists
 	_, err := h.castle.GetUserByID(payload.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with id %d doesn't exists", payload.ID))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with id %d already exists", payload.ID))
 		return
 	}
 
@@ -334,5 +332,5 @@ func (h *Handler) handleCreateOrganizer(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, nil)
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("Organizer with ID %d successfully created", payload.ID))
 }

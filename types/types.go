@@ -123,6 +123,18 @@ type ActivityPayload struct {
 	FkPackageID int     `json:"fk_Packageid" validate:"required" example:"1"`
 }
 
+// ActivityFilterPayload represents the payload for filtering activities.
+// swagger:model
+type ActivityFilterPayload struct {
+	Name      string  `json:"name" example:"Amber history"`
+	MinPrice  float32 `json:"minPrice" example:"15.50"`
+	MaxPrice  float32 `json:"maxPrice" example:"15.50"`
+	Category  string  `json:"category" example:"Education"`
+	MinRating int     `json:"minRating" validate:"min=1,max=5" example:"1"`
+	MaxRating int     `json:"maxRating" validate:"min=1,max=5" example:"5"`
+	Organizer string  `json:"organizer" example:"user"`
+}
+
 // DeleteActivityPayload represents the payload for creating activities.
 // swagger:model
 type DeleteActivityPayload struct {
@@ -168,6 +180,7 @@ type ActivityCastle interface {
 	DeleteActivity(id int) error
 	GetActivityInsidePackageByName(activityName string, packageID int) (*Activity, error)
 	ListActivities() ([]*Activity, error)
+	FilterActivities(ActivityFilterPayload) ([]*Activity, error)
 
 	CreatePackage(Package) error
 	DeletePackage(id int) error

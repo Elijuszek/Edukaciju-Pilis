@@ -80,7 +80,7 @@ func (h *Handler) handleCreateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, nil)
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("Review from %d user successfully created", payload.FkUserID))
 }
 
 func (h *Handler) handleGetReview(w http.ResponseWriter, r *http.Request) {
@@ -185,7 +185,7 @@ func (h *Handler) handleDeleteReview(w http.ResponseWriter, r *http.Request) {
 	existingReview, err := h.castle.GetReviewByID(reviewID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusNoContent)
+			utils.WriteJSON(w, http.StatusNoContent, fmt.Sprintf("Review with ID %d doesn't exist", reviewID))
 			return
 		}
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error fetching review: %w", err))

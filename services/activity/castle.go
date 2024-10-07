@@ -165,6 +165,78 @@ func (c *Castle) DeleteActivity(id int) error {
 	return nil
 }
 
+func (c *Castle) FilterActivities(a types.ActivityFilterPayload) ([]*types.Activity, error) {
+	var categoryID int
+
+	// Check if category is provided, and retrieve its ID from the category table
+	if a.Category != "" {
+		err := c.db.QueryRow("SELECT id_Category FROM category WHERE name = ?", a.Category).Scan(&categoryID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve category ID: %w", err)
+		}
+	}
+
+	// Prepare the SQL query with conditional filtering and necessary joins
+	query := `
+		SELECT activity.*
+		FROM activity
+		JOIN package ON activity.fk_Packageid = package.id
+		JOIN organizer ON package.fk_Organizerid = organizer.id
+		JOIN user ON organizer.id = user.id
+		WHERE
+			(activity.name LIKE COALESCE(NULLIF(?, ''), activity.name)) AND
+			(activity.basePrice >= COALESCE(NULLIF(?, 0), activity.basePrice)) AND
+			(activity.basePrice <= COALESCE(NULLIF(?, 0), activity.basePrice)) AND
+			(activity.averageRating >= COALESCE(NULLIF(?, 0), activity.averageRating)) AND
+			(activity.averageRating <= COALESCE(NULLIF(?, 0), activity.averageRating)) AND
+			(user.username LIKE COALESCE(NULLIF(?, ''), user.username))`
+
+	// If category ID is found, add a filter for it
+	if a.Category != "" {
+		query += " AND activity.category = ?"
+	}
+
+	// Build the query parameters list
+	params := []interface{}{
+		"%" + a.Name + "%",      // Partial match for name
+		a.MinPrice,              // Minimum price filter
+		a.MaxPrice,              // Maximum price filter
+		a.MinRating,             // Minimum rating filter
+		a.MaxRating,             // Maximum rating filter
+		"%" + a.Organizer + "%", // Partial match for organizer (user) name
+	}
+
+	// Add the category ID as a parameter only if it's provided
+	if a.Category != "" {
+		params = append(params, categoryID)
+	}
+
+	// Execute the query with the dynamic parameters
+	rows, err := c.db.Query(query, params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var activities []*types.Activity
+
+	// Iterate over the result set
+	for rows.Next() {
+		a := new(types.Activity)
+		a, err = scanRowIntoActivity(rows) // Custom method to scan a row into Activity object
+		if err != nil {
+			return nil, err
+		}
+		activities = append(activities, a)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return activities, nil
+}
+
 func (c *Castle) CreatePackage(p types.Package) error {
 	_, err := c.db.Exec(
 		"INSERT INTO package (name, description, price, fk_Organizerid) VALUES (?,?,?,?)",
