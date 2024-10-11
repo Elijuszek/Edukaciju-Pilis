@@ -28,6 +28,14 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/reviews/delete/{reviewID:[0-9]+}", h.handleDeleteReview).Methods("DELETE")
 }
 
+// ListReviews godoc
+// @Summary List all reviews
+// @Description List all reviews information from database
+// @Tags review
+// @Produce json
+// @Success	200 {array} types.Review
+// @Failure 500 {object}   types.UserResponse "internal server error"
+// @Router /reviews [get]
 func (h *Handler) handleListReviews(w http.ResponseWriter, r *http.Request) {
 	reviews, err := h.castle.ListReviews()
 	if err != nil {
@@ -37,7 +45,7 @@ func (h *Handler) handleListReviews(w http.ResponseWriter, r *http.Request) {
 
 	// If no reviews found, return a message
 	if len(reviews) == 0 {
-		utils.WriteJSON(w, http.StatusOK, "no reviews found")
+		utils.WriteJSON(w, http.StatusOK, []types.Review{})
 		return
 	}
 
@@ -45,6 +53,18 @@ func (h *Handler) handleListReviews(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, reviews)
 }
 
+// CreateReview godoc
+// @Summary Create a new review
+// @Description Create a new review in the database
+// @Tags review
+// @Accept json
+// @Produce json
+// @Param        payload  body      types.ReviewPayload  true  "Review data"
+// @Success 201  {object}   types.UserResponse "Review from user %d successfully created"
+// @Failure 400  {object}   types.UserResponse "invalid payload"
+// @Failure 422  {object}   types.UserResponse "review from same user: %s already exists"
+// @Failure 500  {object}   types.UserResponse "internal server error"
+// @Router /reviews/create [post]
 func (h *Handler) handleCreateReview(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
 	var payload types.ReviewPayload
@@ -83,17 +103,27 @@ func (h *Handler) handleCreateReview(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("Review from %d user successfully created", payload.FkUserID))
 }
 
+// GetReview godoc
+// @Summary Get a review by ID
+// @Description Get a review by ID from the database
+// @Tags review
+// @Produce json
+// @Param reviewID path int true "Review ID"
+// @Success 200 {object} types.Review
+// @Failure 400 {object}   types.UserResponse "missing or invalid review ID"
+// @Failure 500 {object}   types.UserResponse "internal server error"
+// @Router /reviews/{reviewID} [get]
 func (h *Handler) handleGetReview(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	str, ok := vars["reviewID"]
 	if !ok {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing review ID"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid review ID"))
 		return
 	}
 
 	reviewID, err := strconv.Atoi(str)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid review ID"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid review ID"))
 		return
 	}
 
@@ -106,19 +136,32 @@ func (h *Handler) handleGetReview(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, review)
 }
 
+// UpdateReview godoc
+// @Summary Update a review by ID
+// @Description Update a review by ID in the database
+// @Tags review
+// @Accept json
+// @Produce json
+// @Param reviewID path int true "Review ID"
+// @Param        payload  body      types.ReviewPayload  true  "Review data"
+// @Success 200 {object} types.Review
+// @Failure 400 {object}   types.UserResponse "missing or invalid review ID"
+// @NotFound 404 {object}   types.UserResponse "review not found"
+// @Failure 500 {object}   types.UserResponse "internal server error"
+// @Router /reviews/update/{reviewID} [put]
 func (h *Handler) handleUpdateReview(w http.ResponseWriter, r *http.Request) {
 	// Get the review ID from the URL parameters
 	vars := mux.Vars(r)
 	str, ok := vars["reviewID"]
 	if !ok {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing review ID"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid review ID"))
 		return
 	}
 
 	// Convert review ID from string to int
 	reviewID, err := strconv.Atoi(str)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid review ID"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid review ID"))
 		return
 	}
 
@@ -165,19 +208,28 @@ func (h *Handler) handleUpdateReview(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, updatedReview)
 }
 
+// DeleteReview godoc
+// @Summary Delete a review by ID
+// @Description Delete a review by ID from the database
+// @Tags review
+// @Param reviewID path int true "Review ID"
+// @Success 200 {object}   types.UserResponse "Review with ID %d successfully deleted"
+// @Failure 400 {object}   types.UserResponse "missing or invalid review ID"
+// @Failure 500 {object}   types.UserResponse "internal server error"
+// @Router /reviews/delete/{reviewID} [delete]
 func (h *Handler) handleDeleteReview(w http.ResponseWriter, r *http.Request) {
 	// Get the review ID from the URL parameters
 	vars := mux.Vars(r)
 	reviewIDStr, ok := vars["reviewID"]
 	if !ok {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing review ID"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid review ID"))
 		return
 	}
 
 	// Convert review ID from string to int
 	reviewID, err := strconv.Atoi(reviewIDStr)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid review ID"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid review ID"))
 		return
 	}
 
@@ -185,7 +237,7 @@ func (h *Handler) handleDeleteReview(w http.ResponseWriter, r *http.Request) {
 	existingReview, err := h.castle.GetReviewByID(reviewID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			utils.WriteJSON(w, http.StatusNoContent, fmt.Sprintf("Review with ID %d doesn't exist", reviewID))
+			utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("Review with ID %d doesn't exist", reviewID))
 			return
 		}
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error fetching review: %w", err))

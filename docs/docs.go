@@ -44,6 +44,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/activities/create": {
+            "post": {
+                "description": "Create a new activity with the given name, description, category, price, and package ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activity"
+                ],
+                "summary": "Create a new activity",
+                "parameters": [
+                    {
+                        "description": "Activity data",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ActivityPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Activity %s successfully created",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "activity with name %s inside package already exists",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/activities/delete/{activityID}": {
             "delete": {
                 "description": "Delete activity data by ID from database",
@@ -67,7 +116,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Activity with ID %d successfully deleted",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     },
                     "400": {
@@ -253,7 +302,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Package %s successfully created",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     },
                     "400": {
@@ -300,13 +349,226 @@ const docTemplate = `{
                     "200": {
                         "description": "Package with ID %d successfully deleted",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/reviews": {
+            "get": {
+                "description": "List all reviews information from database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "review"
+                ],
+                "summary": "List all reviews",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.Review"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/reviews/create": {
+            "post": {
+                "description": "Create a new review in the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "review"
+                ],
+                "summary": "Create a new review",
+                "parameters": [
+                    {
+                        "description": "Review data",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ReviewPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Review from user %d successfully created",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "review from same user: %s already exists",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/reviews/delete/{reviewID}": {
+            "delete": {
+                "description": "Delete a review by ID from the database",
+                "tags": [
+                    "review"
+                ],
+                "summary": "Delete a review by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Review ID",
+                        "name": "reviewID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review with ID %d successfully deleted",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "missing or invalid review ID",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/reviews/update/{reviewID}": {
+            "put": {
+                "description": "Update a review by ID in the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "review"
+                ],
+                "summary": "Update a review by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Review ID",
+                        "name": "reviewID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Review data",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ReviewPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.Review"
+                        }
+                    },
+                    "400": {
+                        "description": "missing or invalid review ID",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/reviews/{reviewID}": {
+            "get": {
+                "description": "Get a review by ID from the database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "review"
+                ],
+                "summary": "Get a review by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Review ID",
+                        "name": "reviewID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.Review"
+                        }
+                    },
+                    "400": {
+                        "description": "missing or invalid review ID",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.UserResponse"
                         }
                     }
                 }
@@ -809,6 +1071,58 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "example": "john_doe"
+                }
+            }
+        },
+        "types.Review": {
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "fk_Activityid": {
+                    "type": "integer"
+                },
+                "fk_Userid": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "rating": {
+                    "type": "integer"
+                }
+            }
+        },
+        "types.ReviewPayload": {
+            "type": "object",
+            "required": [
+                "comment",
+                "fk_Activityid",
+                "fk_Userid",
+                "rating"
+            ],
+            "properties": {
+                "comment": {
+                    "type": "string",
+                    "example": "Very nice education"
+                },
+                "fk_Activityid": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "fk_Userid": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "rating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1,
+                    "example": 5
                 }
             }
         },

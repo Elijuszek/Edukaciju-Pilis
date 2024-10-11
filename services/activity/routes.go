@@ -60,6 +60,17 @@ func (h *Handler) handleListActivities(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, activities)
 }
 
+// CreateActivity godoc
+// @Summary      Create a new activity
+// @Description  Create a new activity with the given name, description, category, price, and package ID
+// @Tags         activity
+// @Produce      json
+// @Param        payload body types.ActivityPayload true "Activity data"
+// @Success      201  {object}   types.ErrorResponse "Activity %s successfully created"
+// @Failure      400  {object}   types.ErrorResponse "Invalid payload"
+// @Failure      422  {object}   types.ErrorResponse "activity with name %s inside package already exists"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /activities/create [post]
 func (h *Handler) handleCreateActivity(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
 	var payload types.ActivityPayload
@@ -78,7 +89,7 @@ func (h *Handler) handleCreateActivity(w http.ResponseWriter, r *http.Request) {
 	// check if the activity exists inside package
 	_, err := h.castle.GetActivityInsidePackageByName(payload.Name, payload.FkPackageID)
 	if err == nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("activity with name %s inside package already exists", payload.Name))
+		utils.WriteError(w, http.StatusUnprocessableEntity, fmt.Errorf("activity with name %s inside package already exists", payload.Name))
 		return
 	}
 
@@ -216,8 +227,7 @@ func (h *Handler) handleUpdateActivity(w http.ResponseWriter, r *http.Request) {
 // @Tags         activity
 // @Produce      json
 // @Param        activityID path int true "Activity ID"
-// @Success      200  {string}   string "Activity with ID %d successfully deleted"
-// @NoContent    204  {string}   string "No content"
+// @Success      200  {object}   types.ErrorResponse "Activity with ID %d successfully deleted"
 // @Failure      400  {object}   types.ErrorResponse "missing or invalid activity ID"
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /activities/delete/{activityID} [delete]
@@ -241,7 +251,7 @@ func (h *Handler) handleDeleteActivity(w http.ResponseWriter, r *http.Request) {
 	existingActivity, err := h.castle.GetActivityByID(activityID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusNoContent)
+			utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("Activity with ID %d successfully deleted", activityID))
 			return
 		}
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error fetching activity: %w", err))
@@ -306,7 +316,7 @@ func (h *Handler) handleFilterActivities(w http.ResponseWriter, r *http.Request)
 // @Tags         package
 // @Produce      json
 // @Param        payload body types.CreatePackagePayload true "Package data"
-// @Success      201  {string}   string "Package %s successfully created"
+// @Success      201  {object}   types.ErrorResponse "Package %s successfully created"
 // @Failure      400  {object}   types.ErrorResponse "Invalid payload"
 // @Failure      422  {object}   types.ErrorResponse "Package with name %s already exists"
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
@@ -355,7 +365,7 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 // @Tags         package
 // @Produce      json
 // @Param        packageID path int true "Package ID"
-// @Success      200  {string}   string "Package with ID %d successfully deleted"
+// @Success      200  {object}   types.ErrorResponse "Package with ID %d successfully deleted"
 // @BadRequest   400  {object}   types.ErrorResponse "missing or invalid package ID"
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /packages/delete/{packageID} [delete]
