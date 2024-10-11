@@ -85,9 +85,7 @@ User "1" --> "0..*"  Review : writes
 Review "0..*" <-- "1" Activity : hasWritten
 
 Organizer "1" --> "0..*" Package : creates
-Organizer "1" --> "0..*" Theme : organizes
 Package "1" --> "0..*" Activity : includes
-Theme "1" --> "0..*" Activity : contains
 
 Administrator --|> User
 Organizer --|> User
@@ -112,11 +110,6 @@ class Package{
     string name
     string description
     double price
-}
-
-class Theme{
-    int id
-    string title
 }
 
 class Organizer{
