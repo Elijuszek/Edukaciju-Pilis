@@ -146,8 +146,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 // @Description  List all registered users displaying the user information (username, email, password).
 // @Tags         user
 // @Produce      json
-// @Success      200  {object}   types.User
-// @Success      200  {object}   types.UserResponse  "no users found"
+// @Success      200  {array}   types.User
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /users [get]
 func (h *Handler) handleListUsers(w http.ResponseWriter, r *http.Request) {
@@ -159,7 +158,7 @@ func (h *Handler) handleListUsers(w http.ResponseWriter, r *http.Request) {
 
 	// If no users found, return a message
 	if len(reviews) == 0 {
-		utils.WriteJSON(w, http.StatusOK, "no users found")
+		utils.WriteJSON(w, http.StatusOK, []types.Review{})
 		return
 	}
 

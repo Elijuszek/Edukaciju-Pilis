@@ -35,12 +35,12 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 }
 
-// RegisterUser godoc
+// ListActivities godoc
 // @Summary      List all activities
 // @Description  Returns list of all registered activities
-// @Tags         activities
+// @Tags         activity
 // @Produce      json
-// @Success      200  {object}   types.Activity
+// @Success      200  {array}    types.Activity
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /activities [get]
 func (h *Handler) handleListActivities(w http.ResponseWriter, r *http.Request) {
@@ -50,9 +50,9 @@ func (h *Handler) handleListActivities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If no activities found, return a message
+	// If no activities found, return an empty array
 	if len(activities) == 0 {
-		utils.WriteJSON(w, http.StatusOK, "no reviews found")
+		utils.WriteJSON(w, http.StatusOK, []types.Activity{})
 		return
 	}
 
@@ -99,17 +99,28 @@ func (h *Handler) handleCreateActivity(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("Activity %s successfully created", payload.Name))
 }
 
+// GetActivity godoc
+// @Summary      Get activity by ID
+// @Description  Get activity data by ID from the database
+// @Tags         activity
+// @Produce      json
+// @Param        activityID path int true "Activity ID"
+// @Success      200  {object}   types.Activity
+// @Failure      400  {object}   types.ErrorResponse "missing or invalid activity ID"
+// @NotFound     404  {object}   types.ErrorResponse "Activity not found"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /activities/{activityID} [get]
 func (h *Handler) handleGetActivity(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	str, ok := vars["activityID"]
 	if !ok {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing activity ID"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid activity ID"))
 		return
 	}
 
 	activityID, err := strconv.Atoi(str)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid activity ID"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid activity ID"))
 		return
 	}
 
@@ -126,6 +137,18 @@ func (h *Handler) handleGetActivity(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, activity)
 }
 
+// UpdateActivity godoc
+// @Summary      Update activity by ID
+// @Description  Update activity data by ID and specifying the new values
+// @Tags         activity
+// @Produce      json
+// @Param        activityID path int true "Activity ID"
+// @Param        payload body types.ActivityPayload true "Activity data"
+// @Success      200  {object}   types.Activity
+// @Failure      400  {object}   types.ErrorResponse "missing or invalid activity ID"
+// @Failure      404  {object}   types.ErrorResponse "Activity not found"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /activities/update/{activityID} [put]
 func (h *Handler) handleUpdateActivity(w http.ResponseWriter, r *http.Request) {
 	// Get the activity ID from the URL parameters
 	vars := mux.Vars(r)
@@ -187,6 +210,17 @@ func (h *Handler) handleUpdateActivity(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, updateActivity)
 }
 
+// DeleteActivity godoc
+// @Summary      Delete activity by ID
+// @Description  Delete activity data by ID from database
+// @Tags         activity
+// @Produce      json
+// @Param        activityID path int true "Activity ID"
+// @Success      200  {string}   string "Activity with ID %d successfully deleted"
+// @NoContent    204  {string}   string "No content"
+// @Failure      400  {object}   types.ErrorResponse "missing or invalid activity ID"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /activities/delete/{activityID} [delete]
 func (h *Handler) handleDeleteActivity(w http.ResponseWriter, r *http.Request) {
 	// Get the review ID from the URL parameters
 	vars := mux.Vars(r)
@@ -225,6 +259,16 @@ func (h *Handler) handleDeleteActivity(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("Activity with ID %d successfully deleted", activityID))
 }
 
+// FilterActivities godoc
+// @Summary      Filter activities
+// @Description  Filter activities by category, rating, price, and hidden status
+// @Tags         activity
+// @Produce      json
+// @Param        payload body types.ActivityFilterPayload true "Filter payload"
+// @Success      200  {array}    types.Activity
+// @Failure      400  {object}   types.ErrorResponse "Invalid payload"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /activities/filter [get]
 func (h *Handler) handleFilterActivities(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
 	var payload types.ActivityFilterPayload
@@ -248,7 +292,7 @@ func (h *Handler) handleFilterActivities(w http.ResponseWriter, r *http.Request)
 
 	// If no activities found, return a message
 	if len(activities) == 0 {
-		utils.WriteJSON(w, http.StatusOK, "no reviews found")
+		utils.WriteJSON(w, http.StatusOK, []types.Activity{})
 		return
 	}
 
@@ -256,6 +300,17 @@ func (h *Handler) handleFilterActivities(w http.ResponseWriter, r *http.Request)
 	utils.WriteJSON(w, http.StatusOK, activities)
 }
 
+// CreatePackage godoc
+// @Summary      Create a new package
+// @Description  Create a new package with the given name, description, price, and organizer ID
+// @Tags         package
+// @Produce      json
+// @Param        payload body types.CreatePackagePayload true "Package data"
+// @Success      201  {string}   string "Package %s successfully created"
+// @Failure      400  {object}   types.ErrorResponse "Invalid payload"
+// @Failure      422  {object}   types.ErrorResponse "Package with name %s already exists"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /packages/create [post]
 func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
 	var payload types.CreatePackagePayload
@@ -294,6 +349,16 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("Package  %s successfully created", payload.Name))
 }
 
+// DeletePackage godoc
+// @Summary      Delete package by ID
+// @Description  Delete package data with all activties by ID from database
+// @Tags         package
+// @Produce      json
+// @Param        packageID path int true "Package ID"
+// @Success      200  {string}   string "Package with ID %d successfully deleted"
+// @BadRequest   400  {object}   types.ErrorResponse "missing or invalid package ID"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /packages/delete/{packageID} [delete]
 func (h *Handler) handleDeletePackage(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
 	var payload struct {
@@ -308,7 +373,7 @@ func (h *Handler) handleDeletePackage(w http.ResponseWriter, r *http.Request) {
 	// validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid package ID %v", errors))
 		return
 	}
 

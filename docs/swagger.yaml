@@ -23,6 +23,62 @@ definitions:
       verified:
         type: boolean
     type: object
+  types.ActivityFilterPayload:
+    properties:
+      category:
+        example: Education
+        type: string
+      maxPrice:
+        example: 15.5
+        type: number
+      maxRating:
+        example: 5
+        maximum: 5
+        minimum: 1
+        type: integer
+      minPrice:
+        example: 15.5
+        type: number
+      minRating:
+        example: 1
+        maximum: 5
+        minimum: 1
+        type: integer
+      name:
+        example: Amber history
+        type: string
+      organizer:
+        example: user
+        type: string
+    type: object
+  types.ActivityPayload:
+    properties:
+      basePrice:
+        example: 15.5
+        type: number
+      category:
+        example: Education
+        type: string
+      description:
+        example: Educations about amber
+        type: string
+      fk_Packageid:
+        example: 1
+        type: integer
+      hidden:
+        example: true
+        type: boolean
+      name:
+        example: Amber history
+        type: string
+    required:
+    - basePrice
+    - category
+    - description
+    - fk_Packageid
+    - hidden
+    - name
+    type: object
   types.CreateOrganizerPayload:
     properties:
       description:
@@ -34,6 +90,26 @@ definitions:
     required:
     - description
     - id
+    type: object
+  types.CreatePackagePayload:
+    properties:
+      description:
+        example: Everything about amber
+        type: string
+      fk_Organizerid:
+        example: 1
+        type: integer
+      name:
+        example: Amber
+        type: string
+      price:
+        example: 40
+        type: number
+    required:
+    - description
+    - fk_Organizerid
+    - name
+    - price
     type: object
   types.ErrorResponse:
     properties:
@@ -119,14 +195,193 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.Activity'
+            items:
+              $ref: '#/definitions/types.Activity'
+            type: array
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/types.ErrorResponse'
       summary: List all activities
       tags:
-      - activities
+      - activity
+  /activities/{activityID}:
+    get:
+      description: Get activity data by ID from the database
+      parameters:
+      - description: Activity ID
+        in: path
+        name: activityID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.Activity'
+        "400":
+          description: missing or invalid activity ID
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: Get activity by ID
+      tags:
+      - activity
+  /activities/delete/{activityID}:
+    delete:
+      description: Delete activity data by ID from database
+      parameters:
+      - description: Activity ID
+        in: path
+        name: activityID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Activity with ID %d successfully deleted
+          schema:
+            type: string
+        "400":
+          description: missing or invalid activity ID
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: Delete activity by ID
+      tags:
+      - activity
+  /activities/filter:
+    get:
+      description: Filter activities by category, rating, price, and hidden status
+      parameters:
+      - description: Filter payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/types.ActivityFilterPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/types.Activity'
+            type: array
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: Filter activities
+      tags:
+      - activity
+  /activities/update/{activityID}:
+    put:
+      description: Update activity data by ID and specifying the new values
+      parameters:
+      - description: Activity ID
+        in: path
+        name: activityID
+        required: true
+        type: integer
+      - description: Activity data
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/types.ActivityPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.Activity'
+        "400":
+          description: missing or invalid activity ID
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "404":
+          description: Activity not found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: Update activity by ID
+      tags:
+      - activity
+  /packages/create:
+    post:
+      description: Create a new package with the given name, description, price, and
+        organizer ID
+      parameters:
+      - description: Package data
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreatePackagePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Package %s successfully created
+          schema:
+            type: string
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "422":
+          description: Package with name %s already exists
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: Create a new package
+      tags:
+      - package
+  /packages/delete/{packageID}:
+    delete:
+      description: Delete package data with all activties by ID from database
+      parameters:
+      - description: Package ID
+        in: path
+        name: packageID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Package with ID %d successfully deleted
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: Delete package by ID
+      tags:
+      - package
   /users:
     get:
       description: List all registered users displaying the user information (username,
@@ -135,9 +390,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: no users found
+          description: OK
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            items:
+              $ref: '#/definitions/types.User'
+            type: array
         "500":
           description: Internal server error
           schema:

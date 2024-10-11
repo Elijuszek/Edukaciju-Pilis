@@ -11,14 +11,285 @@
                     "application/json"
                 ],
                 "tags": [
-                    "activities"
+                    "activity"
                 ],
                 "summary": "List all activities",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.Activity"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/activities/delete/{activityID}": {
+            "delete": {
+                "description": "Delete activity data by ID from database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activity"
+                ],
+                "summary": "Delete activity by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Activity ID",
+                        "name": "activityID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Activity with ID %d successfully deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "missing or invalid activity ID",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/activities/filter": {
+            "get": {
+                "description": "Filter activities by category, rating, price, and hidden status",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activity"
+                ],
+                "summary": "Filter activities",
+                "parameters": [
+                    {
+                        "description": "Filter payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ActivityFilterPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.Activity"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/activities/update/{activityID}": {
+            "put": {
+                "description": "Update activity data by ID and specifying the new values",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activity"
+                ],
+                "summary": "Update activity by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Activity ID",
+                        "name": "activityID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Activity data",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ActivityPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
                             "$ref": "#/definitions/types.Activity"
+                        }
+                    },
+                    "400": {
+                        "description": "missing or invalid activity ID",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Activity not found",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/activities/{activityID}": {
+            "get": {
+                "description": "Get activity data by ID from the database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activity"
+                ],
+                "summary": "Get activity by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Activity ID",
+                        "name": "activityID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.Activity"
+                        }
+                    },
+                    "400": {
+                        "description": "missing or invalid activity ID",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/packages/create": {
+            "post": {
+                "description": "Create a new package with the given name, description, price, and organizer ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "package"
+                ],
+                "summary": "Create a new package",
+                "parameters": [
+                    {
+                        "description": "Package data",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.CreatePackagePayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Package %s successfully created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Package with name %s already exists",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/packages/delete/{packageID}": {
+            "delete": {
+                "description": "Delete package data with all activties by ID from database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "package"
+                ],
+                "summary": "Delete package by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Package ID",
+                        "name": "packageID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Package with ID %d successfully deleted",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -42,9 +313,12 @@
                 "summary": "List all users",
                 "responses": {
                     "200": {
-                        "description": "no users found",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.User"
+                            }
                         }
                     },
                     "500": {
@@ -379,6 +653,80 @@
                 }
             }
         },
+        "types.ActivityFilterPayload": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "Education"
+                },
+                "maxPrice": {
+                    "type": "number",
+                    "example": 15.5
+                },
+                "maxRating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1,
+                    "example": 5
+                },
+                "minPrice": {
+                    "type": "number",
+                    "example": 15.5
+                },
+                "minRating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1,
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Amber history"
+                },
+                "organizer": {
+                    "type": "string",
+                    "example": "user"
+                }
+            }
+        },
+        "types.ActivityPayload": {
+            "type": "object",
+            "required": [
+                "basePrice",
+                "category",
+                "description",
+                "fk_Packageid",
+                "hidden",
+                "name"
+            ],
+            "properties": {
+                "basePrice": {
+                    "type": "number",
+                    "example": 15.5
+                },
+                "category": {
+                    "type": "string",
+                    "example": "Education"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Educations about amber"
+                },
+                "fk_Packageid": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "hidden": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Amber history"
+                }
+            }
+        },
         "types.CreateOrganizerPayload": {
             "type": "object",
             "required": [
@@ -393,6 +741,33 @@
                 "id": {
                     "type": "integer",
                     "example": 123
+                }
+            }
+        },
+        "types.CreatePackagePayload": {
+            "type": "object",
+            "required": [
+                "description",
+                "fk_Organizerid",
+                "name",
+                "price"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Everything about amber"
+                },
+                "fk_Organizerid": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Amber"
+                },
+                "price": {
+                    "type": "number",
+                    "example": 40
                 }
             }
         },
