@@ -1,4 +1,40 @@
 definitions:
+  types.Activity:
+    properties:
+      averageRating:
+        type: number
+      basePrice:
+        type: number
+      category:
+        type: string
+      creationDate:
+        type: string
+      description:
+        type: string
+      fk_Packageid:
+        type: integer
+      hidden:
+        example: false
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+      verified:
+        type: boolean
+    type: object
+  types.CreateOrganizerPayload:
+    properties:
+      description:
+        example: organizer
+        type: string
+      id:
+        example: 123
+        type: integer
+    required:
+    - description
+    - id
+    type: object
   types.ErrorResponse:
     properties:
       code:
@@ -8,13 +44,42 @@ definitions:
         example: Invalid payload or user already exists
         type: string
     type: object
-  types.RegisterUserPayload:
+  types.LoginUserPayload:
+    properties:
+      password:
+        example: password123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  types.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      lastLoginDate:
+        type: string
+      password:
+        type: string
+      registrationDate:
+        type: string
+      username:
+        type: string
+    type: object
+  types.UserPayload:
     properties:
       email:
         example: john.doe@example.com
         type: string
       password:
         example: password123
+        maxLength: 64
+        minLength: 5
         type: string
       username:
         example: john_doe
@@ -45,7 +110,162 @@ definitions:
 info:
   contact: {}
 paths:
+  /activities:
+    get:
+      description: Returns list of all registered activities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.Activity'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: List all activities
+      tags:
+      - activities
   /users:
+    get:
+      description: List all registered users displaying the user information (username,
+        email, password).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: no users found
+          schema:
+            $ref: '#/definitions/types.UserResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: List all users
+      tags:
+      - user
+  /users/{userID}:
+    get:
+      description: Returns user with mathcing id
+      parameters:
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.User'
+        "400":
+          description: invalid user ID
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "404":
+          description: user not found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: Get user by id
+      tags:
+      - user
+  /users/create-organizer:
+    post:
+      description: creates organizer role inside database with specified description
+      parameters:
+      - description: Organizer data
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateOrganizerPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Organizer with ID %d successfully created
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "400":
+          description: invalid payload
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "404":
+          description: user not found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: create organizer role inside database
+      tags:
+      - user
+  /users/delete/{userID}:
+    delete:
+      description: deletes user with specified id
+      parameters:
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: user with id %d successfully deleted
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "400":
+          description: invalid payload
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: delete user from database
+      tags:
+      - user
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Login to user account specifying (username, password).
+      parameters:
+      - description: User login data
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/types.LoginUserPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Generated jwt"  "eyJhbGcifdghOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+          schema:
+            type: string
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: Login to user account
+      tags:
+      - user
+  /users/register:
     post:
       consumes:
       - application/json
@@ -57,7 +277,7 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/types.RegisterUserPayload'
+          $ref: '#/definitions/types.UserPayload'
       produces:
       - application/json
       responses:
@@ -66,7 +286,7 @@ paths:
           schema:
             $ref: '#/definitions/types.UserResponse'
         "400":
-          description: Invalid payload or user already exists
+          description: invalud payload
           schema:
             $ref: '#/definitions/types.ErrorResponse'
         "500":
@@ -75,5 +295,42 @@ paths:
             $ref: '#/definitions/types.ErrorResponse'
       summary: Create a new user account
       tags:
-      - users
+      - user
+  /users/update/{userID}:
+    put:
+      description: updates user with matching id with payload user data
+      parameters:
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      - description: User update data
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/types.UserPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.User'
+        "400":
+          description: invalid payload
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "404":
+          description: user not found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: update user
+      tags:
+      - user
 swagger: "2.0"

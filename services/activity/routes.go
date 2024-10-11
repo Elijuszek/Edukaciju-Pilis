@@ -35,6 +35,14 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 }
 
+// RegisterUser godoc
+// @Summary      List all activities
+// @Description  Returns list of all registered activities
+// @Tags         activities
+// @Produce      json
+// @Success      200  {object}   types.Activity
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /activities [get]
 func (h *Handler) handleListActivities(w http.ResponseWriter, r *http.Request) {
 	activities, err := h.castle.ListActivities()
 	if err != nil {
@@ -52,17 +60,6 @@ func (h *Handler) handleListActivities(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, activities)
 }
 
-// RegisterUser godoc
-// @Summary      Create a new user account
-// @Description  Create a new user by specifying the user information (username, email, password).
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Param        payload  body      types.RegisterUserPayload  true  "User registration data"
-// @Success      201  {object}   types.UserResponse  "User successfully created"
-// @Failure      400  {object}   types.ErrorResponse "Invalid payload or user already exists"
-// @Failure      500  {object}   types.ErrorResponse "Internal server error"
-// @Router       /users/register [post]
 func (h *Handler) handleCreateActivity(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
 	var payload types.ActivityPayload
@@ -259,17 +256,6 @@ func (h *Handler) handleFilterActivities(w http.ResponseWriter, r *http.Request)
 	utils.WriteJSON(w, http.StatusOK, activities)
 }
 
-// RegisterUser godoc
-// @Summary      Create a new user account
-// @Description  Create a new user by specifying the user information (username, email, password).
-// @Tags         users
-// @Accept       json
-// @Produce      json
-// @Param        payload  body      types.RegisterUserPayload  true  "User registration data"
-// @Success      201  {object}   types.UserResponse  "User successfully created"
-// @Failure      400  {object}   types.ErrorResponse "Invalid payload or user already exists"
-// @Failure      500  {object}   types.ErrorResponse "Internal server error"
-// @Router       /users/register [post]
 func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
 	var payload types.CreatePackagePayload

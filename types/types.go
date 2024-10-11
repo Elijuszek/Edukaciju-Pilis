@@ -2,83 +2,94 @@ package types
 
 import "time"
 
+// Activity represents activity such as education or event
+// swagger:model
 type Activity struct {
-	ID            int       `json:"id"`
-	Name          string    `json:"name"`
-	Description   string    `json:"description"`
-	BasePrice     float32   `json:"basePrice"`
-	CreationDate  time.Time `json:"creationDate"`
-	Hidden        bool      `json:"hidden"`
-	Verified      bool      `json:"verified"`
-	Category      string    `json:"category"`
-	AverageRating float32   `json:"averageRating"`
-	FkPackageID   int       `json:"fk_Packageid"`
+	ID            int       `json:"id" exapmle:"1"`
+	Name          string    `json:"name" exapmle:"Amber history"`
+	Description   string    `json:"description" exapmle:"Education about amber"`
+	BasePrice     float32   `json:"basePrice" exapmle:"20.50"`
+	CreationDate  time.Time `json:"creationDate" exapmle:"2024-10-08 14:23:45.6789013 +0000UTC"`
+	Hidden        bool      `json:"hidden" example:"false"`
+	Verified      bool      `json:"verified" exapmle:"true"`
+	Category      string    `json:"category" exapmle:"Education"`
+	AverageRating float32   `json:"averageRating" exapmle:"3.5"`
+	FkPackageID   int       `json:"fk_Packageid" exapmle:"1"`
 }
 
+// Activity represents package created by organizer which can be combined of many different activities
+// swagger:model
 type Package struct {
-	ID            int     `json:"id"`
-	Name          string  `json:"name"`
-	Description   string  `json:"description"`
-	Price         float32 `json:"price"`
-	FkOrganizerID int     `json:"fk_Organizerid"`
+	ID            int     `json:"id" exapmle:"1"`
+	Name          string  `json:"name" example:"Amber"`
+	Description   string  `json:"description" exapmle:"All educations about amber"`
+	Price         float32 `json:"price" exapmle:"100.20"`
+	FkOrganizerID int     `json:"fk_Organizerid" exapmle:"1"`
 }
 
 type Location struct {
-	ID           int     `json:"id"`
-	Address      string  `json:"address"`
-	Longitude    float64 `json:"longitude"`
-	Latitude     float64 `json:"latitude"`
-	FkActivityID int     `json:"fk_Activityid"`
+	ID           int     `json:"id" exapmle:"1"`
+	Address      string  `json:"address" exapmle:"Kaunas city"`
+	Longitude    float64 `json:"longitude" exapmle:"50.215458"`
+	Latitude     float64 `json:"latitude" exapmle:"50.459414"`
+	FkActivityID int     `json:"fk_Activityid" exapmle:"1"`
 }
 
+// User represents first authorized system role
 // swagger:model
 type User struct {
-	ID               int       `json:"id"`
-	Username         string    `json:"username"`
-	Password         string    `json:"password"`
-	Email            string    `json:"email"`
-	RegistrationDate time.Time `json:"registrationDate"`
-	LastLoginDate    time.Time `json:"lastLoginDate"`
+	ID               int       `json:"id" exapmle:"1"`
+	Username         string    `json:"username" exapmle:"user"`
+	Password         string    `json:"password" exapmle:"password"`
+	Email            string    `json:"email" exapmle:"user@email.com"`
+	RegistrationDate time.Time `json:"registrationDate" exapmle:"2024-10-08 14:23:45.6789013 +0000UTC"`
+	LastLoginDate    time.Time `json:"lastLoginDate" exapmle:"2024-10-08 14:23:45.6789013 +0000UTC"`
 }
 
+// Review represents comments and ratings left in activity by other user
+// swagger:model
 type Review struct {
-	ID           int       `json:"id"`
-	Date         time.Time `json:"date"`
-	Comment      *string   `json:"comment"`
-	Rating       int       `json:"rating"`
-	FkUserID     int       `json:"fk_Userid"`
-	FkActivityID int       `json:"fk_Activityid"`
+	ID           int       `json:"id" exapmle:"1"`
+	Date         time.Time `json:"date" exapmle:"2024-10-08 14:23:45.6789013 +0000UTC"`
+	Comment      *string   `json:"comment" exapmle:"Very nice education!"`
+	Rating       int       `json:"rating" exapmle:"5"`
+	FkUserID     int       `json:"fk_Userid" exapmle:"1"`
+	FkActivityID int       `json:"fk_Activityid" exapmle:"1"`
 }
 
+// Administrator represents system role. Has rights on entire system
+// swagger:model
 type Administrator struct {
-	ID            int `json:"id"`
-	SecurityLevel int `json:"securityLevel"`
+	ID            int `json:"id" exapmle:"1"`
+	SecurityLevel int `json:"securityLevel" exapmle:"2"`
 }
 
+// Organizer represents system role. Can create new packages and activities
+// swagger:model
 type Organizer struct {
-	ID          int     `json:"id"`
-	Description *string `json:"description"`
+	ID          int     `json:"id" exapmle:"1"`
+	Description *string `json:"description" exapmle:"Organizes educations about amber"`
 }
 
 type Subscribers struct {
-	ID               int       `json:"id"`
-	Email            string    `json:"email"`
-	SubscriptionDate time.Time `json:"subscriptionDate"`
+	ID               int       `json:"id" exapmle:"1"`
+	Email            string    `json:"email" exapmle:"subscriber@email.com"`
+	SubscriptionDate time.Time `json:"subscriptionDate" exapmle:"2024-10-08 14:23:45.6789013 +0000UTC"`
 }
 
 type Image struct {
-	ID          int       `json:"id"`
-	Description *string   `json:"description"`
-	FilePath    string    `json:"filePath"`
-	Url         string    `json:"url"`
-	UploadTime  time.Time `json:"uploadTime"`
+	ID          int       `json:"id" exapmle:"1"`
+	Description *string   `json:"description" exapmle:"atl text"`
+	FilePath    string    `json:"filePath" exapmle:"resources/images/"`
+	Url         string    `json:"url" exapmle:"resources/images/url"`
+	UploadTime  time.Time `json:"uploadTime" exapmle:"2024-10-08 14:23:45.6789013 +0000UTC"`
 }
 
 type EntityImage struct {
-	ID         int    `json:"id"`
-	EntityType string `json:"entityType"`
-	FkEntity   int    `json:"fk_entity"`
-	FkImageID  int    `json:"fk_Imageid"`
+	ID         int    `json:"id" exapmle:"1"`
+	EntityType string `json:"entityType" exapmle:"activity"`
+	FkEntity   int    `json:"fk_entity" exapmle:"1"`
+	FkImageID  int    `json:"fk_Imageid" exapmle:" example:"1"`
 }
 
 type Category string
@@ -92,7 +103,7 @@ const (
 
 // Payloads
 
-// UserPayload represents the payload for creating a new user and updating information.
+// UserPayload represents the payload for viewing user, creating a new user and updating information.
 // swagger:model
 type UserPayload struct {
 	Username string `json:"username" validate:"required" example:"john_doe"`
@@ -133,13 +144,6 @@ type ActivityFilterPayload struct {
 	MinRating int     `json:"minRating" validate:"min=1,max=5" example:"1"`
 	MaxRating int     `json:"maxRating" validate:"min=1,max=5" example:"5"`
 	Organizer string  `json:"organizer" example:"user"`
-}
-
-// DeleteActivityPayload represents the payload for creating activities.
-// swagger:model
-type DeleteActivityPayload struct {
-	Name        string `json:"name" validate:"required"`
-	FkPackageID int    `json:"fk_PackageId" validate:"required"`
 }
 
 // CreatePackagePayload represents the payload for creating packages.

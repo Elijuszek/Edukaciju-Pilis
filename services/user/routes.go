@@ -41,7 +41,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 // @Accept       json
 // @Produce      json
 // @Param        payload  body   types.LoginUserPayload  true  "User login data"
-// @Success      201  {object}   jwt.token  "User successfully loged in"
+// @Success      200  {object}   string  "Generated jwt"  "eyJhbGcifdghOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
 // @Failure      400  {object}   types.ErrorResponse "Invalid payload"
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /users/login [post]
@@ -84,12 +84,12 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 // RegisterUser godoc
 // @Summary      Create a new user account
 // @Description  Create a new user by specifying the user information (username, email, password).
-// @Tags         users
+// @Tags         user
 // @Accept       json
 // @Produce      json
-// @Param        payload  body      types.RegisterUserPayload  true  "User registration data"
+// @Param        payload  body      types.UserPayload  true  "User registration data"
 // @Success      201  {object}   types.UserResponse  "User successfully created"
-// @Failure      400  {object}   types.ErrorResponse "Invalid payload or user already exists"
+// @Failure      400  {object}   types.ErrorResponse "invalud payload"
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /users/register [post]
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -141,6 +141,15 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("User %s successfully registered", payload.Username))
 }
 
+// ListUsers godoc
+// @Summary      List all users
+// @Description  List all registered users displaying the user information (username, email, password).
+// @Tags         user
+// @Produce      json
+// @Success      200  {object}   types.User
+// @Success      200  {object}   types.UserResponse  "no users found"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /users [get]
 func (h *Handler) handleListUsers(w http.ResponseWriter, r *http.Request) {
 	reviews, err := h.castle.ListUsers()
 	if err != nil {
@@ -150,7 +159,7 @@ func (h *Handler) handleListUsers(w http.ResponseWriter, r *http.Request) {
 
 	// If no users found, return a message
 	if len(reviews) == 0 {
-		utils.WriteJSON(w, http.StatusOK, "no reviews found")
+		utils.WriteJSON(w, http.StatusOK, "no users found")
 		return
 	}
 
@@ -158,6 +167,18 @@ func (h *Handler) handleListUsers(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, reviews)
 }
 
+// GetUser godoc
+// @Summary      Get user by id
+// @Description  Returns user with mathcing id
+// @Tags         user
+// @Produce      json
+// @Param        userID  path      int  true  "User ID"
+// @Success      200  {object}   types.User
+// @Failure      400  {object}   types.ErrorResponse "missing user ID"
+// @Failure      400  {object}   types.ErrorResponse "invalid user ID"
+// @Failure      404  {object}   types.ErrorResponse "user not found"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /users/{userID} [get]
 func (h *Handler) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	str, ok := vars["userID"]
@@ -185,6 +206,18 @@ func (h *Handler) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, user)
 }
 
+// UpdateUser godoc
+// @Summary      update user
+// @Description  updates user with matching id with payload user data
+// @Tags         user
+// @Produce      json
+// @Param        userID  path      int                 true  "User ID"
+// @Param        payload body      types.UserPayload   true  "User update data"
+// @Success      200     {object}  types.User
+// @Failure      400     {object}  types.ErrorResponse "invalid payload"
+// @Failure      404     {object}  types.ErrorResponse "user not found"
+// @Failure      500     {object}  types.ErrorResponse "Internal server error"
+// @Router       /users/update/{userID} [put]
 func (h *Handler) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	// Get the review ID from the URL parameters
 	vars := mux.Vars(r)
@@ -263,6 +296,17 @@ func (h *Handler) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, updateUser)
 }
 
+// DeleteUser godoc
+// @Summary      delete user from database
+// @Description  deletes user with specified id
+// @Tags         user
+// @Produce      json
+// @Param        userID  path      int  true  "User ID"
+// @Success      200  {object}   types.ErrorResponse "user with id %d successfully deleted"
+// @NoContent    204  {object}   types.ErrorResponse "user not found"
+// @Failure      400  {object}   types.ErrorResponse "invalid payload"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /users/delete/{userID} [delete]
 func (h *Handler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	str, ok := vars["userID"]
@@ -281,7 +325,7 @@ func (h *Handler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	existingUser, err := h.castle.GetUserByID(userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusNoContent)
+			utils.WriteError(w, http.StatusNoContent, fmt.Errorf("user not found"))
 			return
 		}
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error fetching review: %w", err))
@@ -298,6 +342,17 @@ func (h *Handler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("user with id %d successfully deleted", userID))
 }
 
+// CreateORganizer godoc
+// @Summary      create organizer role inside database
+// @Description  creates organizer role inside database with specified description
+// @Tags         user
+// @Produce      json
+// @Param        payload  body   types.CreateOrganizerPayload  true  "Organizer data"
+// @Success      201  {object}   types.ErrorResponse "Organizer with ID %d successfully created"
+// @Failure      400  {object}   types.ErrorResponse "invalid payload"
+// @Failure      404  {object}   types.ErrorResponse "user not found"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /users/create-organizer [POST]
 func (h *Handler) handleCreateOrganizer(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
 	var payload types.CreateOrganizerPayload
@@ -317,7 +372,7 @@ func (h *Handler) handleCreateOrganizer(w http.ResponseWriter, r *http.Request) 
 	// TODO: check if organizer already exists
 	_, err := h.castle.GetUserByID(payload.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with id %d already exists", payload.ID))
+		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("user %d not found", payload.ID))
 		return
 	}
 
