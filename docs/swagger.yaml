@@ -396,6 +396,35 @@ paths:
       summary: Update activity by ID
       tags:
       - activity
+  /package/reviews/{packageID}:
+    get:
+      description: Get a reviews from certain package in database
+      parameters:
+      - description: Review ID
+        in: path
+        name: packageID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/types.Review'
+            type: array
+        "400":
+          description: missing or invalid package ID
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      summary: Get a reviews by packageID
+      tags:
+      - review
   /packages/create:
     post:
       description: Create a new package with the given name, description, price, and
@@ -467,7 +496,7 @@ paths:
         "500":
           description: internal server error
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
       summary: List all reviews
       tags:
       - review
@@ -490,11 +519,11 @@ paths:
         "400":
           description: missing or invalid review ID
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "500":
           description: internal server error
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
       summary: Get a review by ID
       tags:
       - review
@@ -516,19 +545,19 @@ paths:
         "201":
           description: Review from user %d successfully created
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "400":
           description: invalid payload
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "422":
           description: 'review from same user: %s already exists'
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "500":
           description: internal server error
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
       summary: Create a new review
       tags:
       - review
@@ -545,15 +574,15 @@ paths:
         "200":
           description: Review with ID %d successfully deleted
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "400":
           description: missing or invalid review ID
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "500":
           description: internal server error
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
       summary: Delete a review by ID
       tags:
       - review
@@ -584,11 +613,11 @@ paths:
         "400":
           description: missing or invalid review ID
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "500":
           description: internal server error
           schema:
-            $ref: '#/definitions/types.UserResponse'
+            $ref: '#/definitions/types.ErrorResponse'
       summary: Update a review by ID
       tags:
       - review

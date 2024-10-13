@@ -129,3 +129,30 @@ func (c *Castle) DeleteReviewByID(id int) error {
 
 	return nil
 }
+
+func (c *Castle) ListReviewsFromPackage(id int) ([]*types.Review, error) {
+	rows, err := c.db.Query(`
+		SELECT review.*
+		FROM review
+		JOIN activity ON review.fk_Activityid = activity.id
+		JOIN package ON activity.fk_Packageid = package.id
+		WHERE package.id = ?
+	`, id)
+
+	var reviews []*types.Review
+
+	for rows.Next() {
+		r := new(types.Review)
+		r, err = scanRowIntoReview(rows)
+		if err != nil {
+			return nil, err
+		}
+		reviews = append(reviews, r)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return reviews, nil
+}

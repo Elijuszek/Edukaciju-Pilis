@@ -341,7 +341,7 @@ func (h *Handler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("user with id %d successfully deleted", userID))
 }
 
-// CreateORganizer godoc
+// CreateOrganizer godoc
 // @Summary      create organizer role inside database
 // @Description  creates organizer role inside database with specified description
 // @Tags         user

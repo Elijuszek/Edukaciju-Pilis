@@ -277,6 +277,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/package/reviews/{packageID}": {
+            "get": {
+                "description": "Get a reviews from certain package in database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "review"
+                ],
+                "summary": "Get a reviews by packageID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Review ID",
+                        "name": "packageID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.Review"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "missing or invalid package ID",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/types.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/packages/create": {
             "post": {
                 "description": "Create a new package with the given name, description, price, and organizer ID",
@@ -384,7 +428,7 @@ const docTemplate = `{
                     "500": {
                         "description": "internal server error",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     }
                 }
@@ -418,25 +462,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Review from user %d successfully created",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     },
                     "400": {
                         "description": "invalid payload",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "review from same user: %s already exists",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "internal server error",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     }
                 }
@@ -462,19 +506,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Review with ID %d successfully deleted",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     },
                     "400": {
                         "description": "missing or invalid review ID",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "internal server error",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     }
                 }
@@ -521,13 +565,13 @@ const docTemplate = `{
                     "400": {
                         "description": "missing or invalid review ID",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "internal server error",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     }
                 }
@@ -562,13 +606,13 @@ const docTemplate = `{
                     "400": {
                         "description": "missing or invalid review ID",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "internal server error",
                         "schema": {
-                            "$ref": "#/definitions/types.UserResponse"
+                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     }
                 }

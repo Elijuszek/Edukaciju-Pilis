@@ -26,6 +26,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/reviews/{reviewID}", h.handleGetReview).Methods(("GET"))
 	router.HandleFunc("/reviews/update/{reviewID:[0-9]+}", h.handleUpdateReview).Methods("PUT")
 	router.HandleFunc("/reviews/delete/{reviewID:[0-9]+}", h.handleDeleteReview).Methods("DELETE")
+	router.HandleFunc("/package/reviews/{packageID:[0-9]+}", h.handleListReviewsFromPackage).Methods(("GET"))
 }
 
 // ListReviews godoc
@@ -34,7 +35,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 // @Tags review
 // @Produce json
 // @Success	200 {array} types.Review
-// @Failure 500 {object}   types.UserResponse "internal server error"
+// @Failure 500 {object}   types.ErrorResponse "internal server error"
 // @Router /reviews [get]
 func (h *Handler) handleListReviews(w http.ResponseWriter, r *http.Request) {
 	reviews, err := h.castle.ListReviews()
@@ -60,10 +61,10 @@ func (h *Handler) handleListReviews(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param        payload  body      types.ReviewPayload  true  "Review data"
-// @Success 201  {object}   types.UserResponse "Review from user %d successfully created"
-// @Failure 400  {object}   types.UserResponse "invalid payload"
-// @Failure 422  {object}   types.UserResponse "review from same user: %s already exists"
-// @Failure 500  {object}   types.UserResponse "internal server error"
+// @Success 201  {object}   types.ErrorResponse "Review from user %d successfully created"
+// @Failure 400  {object}   types.ErrorResponse "invalid payload"
+// @Failure 422  {object}   types.ErrorResponse "review from same user: %s already exists"
+// @Failure 500  {object}   types.ErrorResponse "internal server error"
 // @Router /reviews/create [post]
 func (h *Handler) handleCreateReview(w http.ResponseWriter, r *http.Request) {
 	// get JSON payload
@@ -110,8 +111,8 @@ func (h *Handler) handleCreateReview(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param reviewID path int true "Review ID"
 // @Success 200 {object} types.Review
-// @Failure 400 {object}   types.UserResponse "missing or invalid review ID"
-// @Failure 500 {object}   types.UserResponse "internal server error"
+// @Failure 400 {object}   types.ErrorResponse "missing or invalid review ID"
+// @Failure 500 {object}   types.ErrorResponse "internal server error"
 // @Router /reviews/{reviewID} [get]
 func (h *Handler) handleGetReview(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -145,9 +146,9 @@ func (h *Handler) handleGetReview(w http.ResponseWriter, r *http.Request) {
 // @Param reviewID path int true "Review ID"
 // @Param        payload  body      types.ReviewPayload  true  "Review data"
 // @Success 200 {object} types.Review
-// @Failure 400 {object}   types.UserResponse "missing or invalid review ID"
-// @NotFound 404 {object}   types.UserResponse "review not found"
-// @Failure 500 {object}   types.UserResponse "internal server error"
+// @Failure 400 {object}   types.ErrorResponse "missing or invalid review ID"
+// @NotFound 404 {object}   types.ErrorResponse "review not found"
+// @Failure 500 {object}   types.ErrorResponse "internal server error"
 // @Router /reviews/update/{reviewID} [put]
 func (h *Handler) handleUpdateReview(w http.ResponseWriter, r *http.Request) {
 	// Get the review ID from the URL parameters
@@ -213,9 +214,9 @@ func (h *Handler) handleUpdateReview(w http.ResponseWriter, r *http.Request) {
 // @Description Delete a review by ID from the database
 // @Tags review
 // @Param reviewID path int true "Review ID"
-// @Success 200 {object}   types.UserResponse "Review with ID %d successfully deleted"
-// @Failure 400 {object}   types.UserResponse "missing or invalid review ID"
-// @Failure 500 {object}   types.UserResponse "internal server error"
+// @Success 200 {object}   types.ErrorResponse "Review with ID %d successfully deleted"
+// @Failure 400 {object}   types.ErrorResponse "missing or invalid review ID"
+// @Failure 500 {object}   types.ErrorResponse "internal server error"
 // @Router /reviews/delete/{reviewID} [delete]
 func (h *Handler) handleDeleteReview(w http.ResponseWriter, r *http.Request) {
 	// Get the review ID from the URL parameters
@@ -253,4 +254,45 @@ func (h *Handler) handleDeleteReview(w http.ResponseWriter, r *http.Request) {
 
 	// Return a 200 OK response with a success message
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("Review with ID %d successfully deleted", reviewID))
+}
+
+// GetReviewsFromPackage godoc
+// @Summary Get a reviews by packageID
+// @Description Get a reviews from certain package in database
+// @Tags review
+// @Produce json
+// @Param packageID path int true "Review ID"
+// @Success	200 {array} types.Review
+// @Failure 400 {object}   types.ErrorResponse "missing or invalid package ID"
+// @Failure 500 {object}   types.ErrorResponse "internal server error"
+// @Router /package/reviews/{packageID} [get]
+func (h *Handler) handleListReviewsFromPackage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	str, ok := vars["packageID"]
+	if !ok {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid package ID"))
+		return
+	}
+
+	// Convert package ID from string to int
+	packageID, err := strconv.Atoi(str)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid package ID"))
+		return
+	}
+
+	reviews, err := h.castle.ListReviewsFromPackage(packageID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// If no reviews found, return a message
+	if len(reviews) == 0 {
+		utils.WriteJSON(w, http.StatusOK, []types.Review{})
+		return
+	}
+
+	// Return the reviews as a JSON response
+	utils.WriteJSON(w, http.StatusOK, reviews)
 }

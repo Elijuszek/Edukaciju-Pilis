@@ -197,7 +197,7 @@ type ReviewCastle interface {
 	UpdateReview(Review) error
 	DeleteReviewByID(id int) error
 	ListReviews() ([]*Review, error)
-
+	ListReviewsFromPackage(id int) ([]*Review, error)
 	GetReviewFromActivityByID(idActivity int, idUser int) (*Review, error)
 }
 
