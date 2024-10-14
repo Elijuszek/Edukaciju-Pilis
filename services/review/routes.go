@@ -26,7 +26,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/reviews/{reviewID}", h.handleGetReview).Methods(("GET"))
 	router.HandleFunc("/reviews/update/{reviewID:[0-9]+}", h.handleUpdateReview).Methods("PUT")
 	router.HandleFunc("/reviews/delete/{reviewID:[0-9]+}", h.handleDeleteReview).Methods("DELETE")
-	router.HandleFunc("/package/reviews/{packageID:[0-9]+}", h.handleListReviewsFromPackage).Methods(("GET"))
+	router.HandleFunc("/package/{packageID:[0-9]+}/reviews", h.handleListReviewsFromPackage).Methods(("GET"))
 }
 
 // ListReviews godoc
@@ -265,7 +265,7 @@ func (h *Handler) handleDeleteReview(w http.ResponseWriter, r *http.Request) {
 // @Success	200 {array} types.Review
 // @Failure 400 {object}   types.ErrorResponse "missing or invalid package ID"
 // @Failure 500 {object}   types.ErrorResponse "internal server error"
-// @Router /package/reviews/{packageID} [get]
+// @Router /package/{packageID}/reviews [get]
 func (h *Handler) handleListReviewsFromPackage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	str, ok := vars["packageID"]
