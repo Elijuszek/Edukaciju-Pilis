@@ -18,44 +18,47 @@ type contextKey string
 
 const UserKey contextKey = "userID"
 
-func WithJWTAuth(handlerFunc http.HandlerFunc, castle types.UserCastle) http.HandlerFunc {
+const RoleKey contextKey = "role"
+
+func WithJWTAuth(handlerFunc http.HandlerFunc, castle types.UserCastle, requiredRoles ...string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := utils.GetTokenFromRequest(r)
 		token, err := ValidateJWT(tokenString)
 
-		if err != nil {
-			log.Printf("Failed to validate token: %v", err)
-			PermissionDenied(w)
-			return
-		}
-		if !token.Valid {
-			log.Printf("Invalid token")
+		if err != nil || !token.Valid {
+			log.Printf("Invalid or failed token validation: %v", err)
 			PermissionDenied(w)
 			return
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
-		str := claims["userID"].(string)
-		userID, err := strconv.Atoi(str)
+		userID, err := strconv.Atoi(claims["userID"].(string))
 		if err != nil {
 			log.Printf("Failed to convert UserID to int: %v", err)
 			PermissionDenied(w)
 			return
 		}
 
-		u, err := castle.GetUserByID(userID)
-		if err != nil {
-			log.Printf("Failed to get user by id: %v", err)
+		// Retrieve role from claims
+		role, ok := claims["role"].(string)
+		if !ok {
+			log.Printf("Role missing in token claims")
 			PermissionDenied(w)
 			return
 		}
 
-		// Add the user to the context
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, UserKey, u.ID)
+		// Verify that user has the required role
+		if !hasRequiredRole(role, requiredRoles) {
+			log.Printf("User does not have required role (required %s): %s", requiredRoles, role)
+			PermissionDenied(w)
+			return
+		}
+
+		// Add user ID and role to context
+		ctx := context.WithValue(r.Context(), UserKey, userID)
+		ctx = context.WithValue(ctx, RoleKey, role)
 		r = r.WithContext(ctx)
 
-		// If token is valid
 		handlerFunc(w, r)
 	}
 }
@@ -70,10 +73,11 @@ func ValidateJWT(tokenString string) (*jwt.Token, error) {
 	})
 }
 
-func CreateJWT(secret []byte, userID int) (string, error) {
+func CreateJWT(secret []byte, userID int, role string) (string, error) {
 	expiration := time.Second * time.Duration(configs.Envs.JWTExpirationInSeconds)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID":    strconv.Itoa(userID),
+		"role":      role,
 		"expiredAt": time.Now().Add(expiration).Unix(),
 	})
 
@@ -96,4 +100,13 @@ func GetUserIDFromContext(ctx context.Context) int {
 	}
 
 	return userID
+}
+
+func hasRequiredRole(userRole string, requiredRoles []string) bool {
+	for _, role := range requiredRoles {
+		if userRole == role {
+			return true
+		}
+	}
+	return false
 }

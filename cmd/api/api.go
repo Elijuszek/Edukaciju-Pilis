@@ -39,12 +39,12 @@ func (s *APIServer) Run() error {
 
 	// Activity
 	activityCastle := activity.NewCastle(s.db)
-	activityHandler := activity.NewHandler(activityCastle)
+	activityHandler := activity.NewHandler(activityCastle, userCastle)
 	activityHandler.RegisterRoutes(subrouter)
 
 	// Review
 	reviewCastle := review.NewCastle(s.db)
-	reviewHandler := review.NewHandler(reviewCastle)
+	reviewHandler := review.NewHandler(reviewCastle, userCastle)
 	reviewHandler.RegisterRoutes(subrouter)
 
 	log.Println(color.Format(color.GREEN, "Listening on "+s.addr))

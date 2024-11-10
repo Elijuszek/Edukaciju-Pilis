@@ -26,12 +26,14 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/users/login", h.handleLogin).Methods(("POST"))
 	router.HandleFunc("/users/register", h.handleRegister).Methods(("POST"))
 
-	router.HandleFunc("/users", h.handleListUsers).Methods(("GET"))
-	router.HandleFunc("/users/{userID:[0-9]+}", h.handleGetUser).Methods(("GET"))
-	router.HandleFunc("/users/update/{userID:[0-9]+}", h.handleUpdateUser).Methods("PUT")
-	router.HandleFunc("/users/delete/{userID:[0-9]+}", h.handleDeleteUser).Methods(("DELETE"))
+	router.HandleFunc("/users", auth.WithJWTAuth(h.handleListUsers, h.castle, "administrator")).Methods("GET")
 
-	router.HandleFunc("/users/create-organizer", h.handleCreateOrganizer).Methods(("POST"))
+	router.HandleFunc("/users/{userID:[0-9]+}", auth.WithJWTAuth(h.handleGetUser, h.castle, "administrator")).Methods(("GET"))
+	router.HandleFunc("/users/update/{userID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateUser, h.castle, "administrator", "organizer", "user")).Methods("PUT")
+	router.HandleFunc("/users/delete/{userID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteUser, h.castle, "administrator", "organizer", "user")).Methods(("DELETE"))
+
+	router.HandleFunc("/users/create-organizer", auth.WithJWTAuth(h.handleCreateOrganizer, h.castle, "administrator")).Methods(("POST"))
+	router.HandleFunc("/users/create-administrator", auth.WithJWTAuth(h.handleCreateAdministrator, h.castle, "administrator")).Methods(("POST"))
 }
 
 // LoginUser godoc
@@ -73,7 +75,11 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// JWT
 	secret := []byte(configs.Envs.JWTSecret)
-	token, err := auth.CreateJWT(secret, u.ID)
+	role, err := resolveUserRole(u.ID, h.castle)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found user role"))
+	}
+	token, err := auth.CreateJWT(secret, u.ID, role)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -387,4 +393,61 @@ func (h *Handler) handleCreateOrganizer(w http.ResponseWriter, r *http.Request) 
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("Organizer with ID %d successfully created", payload.ID))
+}
+
+// TODO:
+func (h *Handler) handleCreateAdministrator(w http.ResponseWriter, r *http.Request) {
+	// get JSON payload
+	var payload types.CreateAdministratorPayload
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+		return
+	}
+
+	// check if the user exists
+	// TODO: check if admin already exists
+	_, err := h.castle.GetUserByID(payload.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("user %d not found", payload.ID))
+		return
+	}
+
+	// if it doesnt  create the new user
+	err = h.castle.CreateAdministrator(types.Administrator{
+		ID:            payload.ID,
+		SecurityLevel: payload.SecurityLevel,
+	})
+
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("Organizer with ID %d successfully created", payload.ID))
+}
+
+func resolveUserRole(userID int, castle types.UserCastle) (string, error) {
+	// Check if the user is an administrator
+	if admin, err := castle.GetAdministratorByID(userID); err == nil && admin != nil {
+		return "administrator", nil
+	}
+
+	// Check if the user is an organizer
+	if organizer, err := castle.GetOrganizerByID(userID); err == nil && organizer != nil {
+		return "organizer", nil
+	}
+
+	// Check if the user is a regular user
+	if user, err := castle.GetUserByID(userID); err == nil && user != nil {
+		return "user", nil
+	}
+
+	return "", fmt.Errorf("user not found in any role")
 }

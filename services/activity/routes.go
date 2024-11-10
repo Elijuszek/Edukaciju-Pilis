@@ -3,6 +3,7 @@ package activity
 // TODO: Use sqlx
 import (
 	"database/sql"
+	"educations-castle/services/auth"
 	"educations-castle/types"
 	"educations-castle/utils"
 	"fmt"
@@ -14,24 +15,27 @@ import (
 )
 
 type Handler struct {
-	castle types.ActivityCastle
+	activityCastle types.ActivityCastle
+	userCastle     types.UserCastle
 }
 
-func NewHandler(castle types.ActivityCastle) *Handler {
-	return &Handler{castle: castle}
+func NewHandler(activityCastle types.ActivityCastle, userCastle types.UserCastle) *Handler {
+	return &Handler{
+		activityCastle: activityCastle,
+		userCastle:     userCastle}
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/activities", h.handleListActivities).Methods(("GET"))
-	router.HandleFunc("/activities/create", h.handleCreateActivity).Methods(("POST"))
+	router.HandleFunc("/activities/create", auth.WithJWTAuth(h.handleCreateActivity, h.userCastle, "administrator", "organizer")).Methods(("POST"))
 	router.HandleFunc("/activities/{activityID:[0-9]+}", h.handleGetActivity).Methods(("GET"))
-	router.HandleFunc("/activities/update/{activityID:[0-9]+}", h.handleUpdateActivity).Methods(("PUT"))
-	router.HandleFunc("/activities/delete/{activityID:[0-9]+}", h.handleDeleteActivity).Methods(("DELETE"))
+	router.HandleFunc("/activities/update/{activityID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateActivity, h.userCastle, "administrator", "organizer")).Methods(("PUT"))
+	router.HandleFunc("/activities/delete/{activityID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteActivity, h.userCastle, "administrator", "organizer")).Methods(("DELETE"))
 
 	router.HandleFunc("/activities/filter", h.handleFilterActivities).Methods(("GET"))
 
-	router.HandleFunc("/packages/create", h.handleCreatePackage).Methods(("POST"))
-	router.HandleFunc("/packages/delete/{packageID:[0-9]+}", h.handleDeletePackage).Methods(("DELETE"))
+	router.HandleFunc("/packages/create", auth.WithJWTAuth(h.handleCreatePackage, h.userCastle, "administrator", "organizer")).Methods(("POST"))
+	router.HandleFunc("/packages/delete/{packageID:[0-9]+}", auth.WithJWTAuth(h.handleDeletePackage, h.userCastle, "administrator", "organizer")).Methods(("DELETE"))
 
 }
 
@@ -44,7 +48,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /activities [get]
 func (h *Handler) handleListActivities(w http.ResponseWriter, r *http.Request) {
-	activities, err := h.castle.ListActivities()
+	activities, err := h.activityCastle.ListActivities()
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -87,13 +91,13 @@ func (h *Handler) handleCreateActivity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the activity exists inside package
-	_, err := h.castle.GetActivityInsidePackageByName(payload.Name, payload.FkPackageID)
+	_, err := h.activityCastle.GetActivityInsidePackageByName(payload.Name, payload.FkPackageID)
 	if err == nil {
 		utils.WriteError(w, http.StatusUnprocessableEntity, fmt.Errorf("activity with name %s inside package already exists", payload.Name))
 		return
 	}
 
-	err = h.castle.CreateActivity(types.Activity{
+	err = h.activityCastle.CreateActivity(types.Activity{
 		Name:        payload.Name,
 		Description: payload.Description,
 		BasePrice:   payload.BasePrice,
@@ -135,7 +139,7 @@ func (h *Handler) handleGetActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	activity, err := h.castle.GetActivityByID(activityID)
+	activity, err := h.activityCastle.GetActivityByID(activityID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity not found"))
@@ -191,7 +195,7 @@ func (h *Handler) handleUpdateActivity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the review exists
-	existingReview, err := h.castle.GetActivityByID(activityID)
+	existingReview, err := h.activityCastle.GetActivityByID(activityID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity not found"))
@@ -212,7 +216,7 @@ func (h *Handler) handleUpdateActivity(w http.ResponseWriter, r *http.Request) {
 		FkPackageID: payload.FkPackageID,
 	}
 
-	err = h.castle.UpdateActivity(updateActivity)
+	err = h.activityCastle.UpdateActivity(updateActivity)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -248,7 +252,7 @@ func (h *Handler) handleDeleteActivity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the review exists
-	existingActivity, err := h.castle.GetActivityByID(activityID)
+	existingActivity, err := h.activityCastle.GetActivityByID(activityID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("Activity with ID %d successfully deleted", activityID))
@@ -259,7 +263,7 @@ func (h *Handler) handleDeleteActivity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Attempt to delete the review
-	err = h.castle.DeleteActivity(existingActivity.ID)
+	err = h.activityCastle.DeleteActivity(existingActivity.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error deleting activity: %w", err))
 		return
@@ -294,7 +298,7 @@ func (h *Handler) handleFilterActivities(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	activities, err := h.castle.FilterActivities(payload)
+	activities, err := h.activityCastle.FilterActivities(payload)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -337,14 +341,14 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the package exists
-	_, err := h.castle.GetPackageByName(payload.Name)
+	_, err := h.activityCastle.GetPackageByName(payload.Name)
 	if err == nil {
 		utils.WriteError(w, http.StatusUnprocessableEntity, fmt.Errorf("package with name %s already exists", payload.Name))
 		return
 	}
 
 	// if not create
-	err = h.castle.CreatePackage(types.Package{
+	err = h.activityCastle.CreatePackage(types.Package{
 		Name:          payload.Name,
 		Description:   payload.Description,
 		Price:         payload.Price,
@@ -388,7 +392,7 @@ func (h *Handler) handleDeletePackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// delete package
-	err := h.castle.DeletePackage(payload.ID)
+	err := h.activityCastle.DeletePackage(payload.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to delete package: %v", err))
 		return

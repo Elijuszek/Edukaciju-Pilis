@@ -34,6 +34,36 @@ func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 	return user, nil
 }
 
+func scanRowIntOrganizer(rows *sql.Rows) (*types.Organizer, error) {
+	organizer := new(types.Organizer)
+
+	err := rows.Scan(
+		&organizer.ID,
+		&organizer.Description,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return organizer, nil
+}
+
+func scanRowIntAdministrator(rows *sql.Rows) (*types.Administrator, error) {
+	admin := new(types.Administrator)
+
+	err := rows.Scan(
+		&admin.ID,
+		&admin.SecurityLevel,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return admin, nil
+}
+
 func (c *Castle) ListUsers() ([]*types.User, error) {
 	rows, err := c.db.Query("SELECT * FROM user")
 	if err != nil {
@@ -66,6 +96,46 @@ func (c *Castle) GetUserByID(id int) (*types.User, error) {
 	u := new(types.User)
 	for rows.Next() {
 		u, err = scanRowIntoUser(rows)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if u.ID == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return u, nil
+}
+
+func (c *Castle) GetOrganizerByID(id int) (*types.Organizer, error) {
+	rows, err := c.db.Query("SELECT * FROM organizer WHERE id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	u := new(types.Organizer)
+	for rows.Next() {
+		u, err = scanRowIntOrganizer(rows)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if u.ID == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return u, nil
+}
+
+func (c *Castle) GetAdministratorByID(id int) (*types.Administrator, error) {
+	rows, err := c.db.Query("SELECT * FROM administrator WHERE id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	u := new(types.Administrator)
+	for rows.Next() {
+		u, err = scanRowIntAdministrator(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -154,6 +224,16 @@ func (c *Castle) UpdateUser(user types.User) error {
 func (c *Castle) CreateOrganizer(organizer types.Organizer) error {
 	_, err := c.db.Exec("INSERT INTO organizer (id, description) VALUES (?,?)", organizer.ID,
 		organizer.Description)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Castle) CreateAdministrator(admin types.Administrator) error {
+	_, err := c.db.Exec("INSERT INTO administrator (id, securityLevel) VALUES (?,?)", admin.ID,
+		admin.SecurityLevel)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package review
 
 import (
 	"database/sql"
+	"educations-castle/services/auth"
 	"educations-castle/types"
 	"educations-castle/utils"
 	"fmt"
@@ -13,19 +14,22 @@ import (
 )
 
 type Handler struct {
-	castle types.ReviewCastle
+	reviewCastle types.ReviewCastle
+	userCastle   types.UserCastle
 }
 
-func NewHandler(castle types.ReviewCastle) *Handler {
-	return &Handler{castle: castle}
+func NewHandler(reviewCastle types.ReviewCastle, userCastle types.UserCastle) *Handler {
+	return &Handler{
+		reviewCastle: reviewCastle,
+		userCastle:   userCastle}
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/reviews", h.handleListReviews).Methods(("GET"))
-	router.HandleFunc("/reviews/create", h.handleCreateReview).Methods(("POST"))
+	router.HandleFunc("/reviews/create", auth.WithJWTAuth(h.handleCreateReview, h.userCastle, "administrator", "user")).Methods(("POST"))
 	router.HandleFunc("/reviews/{reviewID}", h.handleGetReview).Methods(("GET"))
-	router.HandleFunc("/reviews/update/{reviewID:[0-9]+}", h.handleUpdateReview).Methods("PUT")
-	router.HandleFunc("/reviews/delete/{reviewID:[0-9]+}", h.handleDeleteReview).Methods("DELETE")
+	router.HandleFunc("/reviews/update/{reviewID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateReview, h.userCastle, "administrator", "user")).Methods("PUT")
+	router.HandleFunc("/reviews/delete/{reviewID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteReview, h.userCastle, "administrator", "organizer")).Methods("DELETE")
 	router.HandleFunc("/package/{packageID:[0-9]+}/reviews", h.handleListReviewsFromPackage).Methods(("GET"))
 }
 
@@ -38,7 +42,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 // @Failure 500 {object}   types.ErrorResponse "internal server error"
 // @Router /reviews [get]
 func (h *Handler) handleListReviews(w http.ResponseWriter, r *http.Request) {
-	reviews, err := h.castle.ListReviews()
+	reviews, err := h.reviewCastle.ListReviews()
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -82,14 +86,14 @@ func (h *Handler) handleCreateReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the review exists
-	_, err := h.castle.GetReviewFromActivityByID(payload.FkActivityID, payload.FkUserID)
+	_, err := h.reviewCastle.GetReviewFromActivityByID(payload.FkActivityID, payload.FkUserID)
 	if err == nil {
 		utils.WriteError(w, http.StatusUnprocessableEntity, fmt.Errorf("review from same user: %s already exists", payload.Comment))
 		return
 	}
 
 	// if it doesnt create the new review
-	err = h.castle.CreateReview(types.Review{
+	err = h.reviewCastle.CreateReview(types.Review{
 		Comment:      &payload.Comment,
 		Rating:       payload.Rating,
 		FkUserID:     payload.FkUserID,
@@ -128,7 +132,7 @@ func (h *Handler) handleGetReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	review, err := h.castle.GetReviewByID(reviewID)
+	review, err := h.reviewCastle.GetReviewByID(reviewID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -181,7 +185,7 @@ func (h *Handler) handleUpdateReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the review exists
-	existingReview, err := h.castle.GetReviewByID(reviewID)
+	existingReview, err := h.reviewCastle.GetReviewByID(reviewID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.WriteError(w, http.StatusNotFound, fmt.Errorf("review not found"))
@@ -200,7 +204,7 @@ func (h *Handler) handleUpdateReview(w http.ResponseWriter, r *http.Request) {
 		FkActivityID: existingReview.FkActivityID,
 	}
 
-	err = h.castle.UpdateReview(updatedReview)
+	err = h.reviewCastle.UpdateReview(updatedReview)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -235,7 +239,7 @@ func (h *Handler) handleDeleteReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the review exists
-	existingReview, err := h.castle.GetReviewByID(reviewID)
+	existingReview, err := h.reviewCastle.GetReviewByID(reviewID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.WriteJSON(w, http.StatusOK, fmt.Sprintf("Review with ID %d doesn't exist", reviewID))
@@ -246,7 +250,7 @@ func (h *Handler) handleDeleteReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Attempt to delete the review
-	err = h.castle.DeleteReviewByID(existingReview.ID)
+	err = h.reviewCastle.DeleteReviewByID(existingReview.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error deleting review: %w", err))
 		return
@@ -281,7 +285,7 @@ func (h *Handler) handleListReviewsFromPackage(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	reviews, err := h.castle.ListReviewsFromPackage(packageID)
+	reviews, err := h.reviewCastle.ListReviewsFromPackage(packageID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

@@ -116,6 +116,12 @@ type CreateOrganizerPayload struct {
 	Description string `json:"description" validate:"required" example:"organizer"`
 }
 
+// TODO:
+type CreateAdministratorPayload struct {
+	ID            int `json:"id" validate:"required" example:"123"`
+	SecurityLevel int `json:"securityLevel" validate:"required" example:"2"`
+}
+
 // LoginUserPayload represents the payload for logging in existing user.
 // swagger:model
 type LoginUserPayload struct {
@@ -167,6 +173,9 @@ type ReviewPayload struct {
 // Interfaces
 type UserCastle interface {
 	GetUserByID(id int) (*User, error)
+	GetAdministratorByID(id int) (*Administrator, error)
+	GetOrganizerByID(id int) (*Organizer, error)
+
 	GetUserByUsername(username string) (*User, error)
 	GetUserByEmail(email string) (*User, error)
 	CreateUser(User) error
@@ -175,6 +184,7 @@ type UserCastle interface {
 	ListUsers() ([]*User, error)
 
 	CreateOrganizer(Organizer) error
+	CreateAdministrator(Administrator) error
 }
 
 type ActivityCastle interface {

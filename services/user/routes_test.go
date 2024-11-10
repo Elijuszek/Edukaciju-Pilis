@@ -101,3 +101,15 @@ func (m *mockUserCastle) ListUsers() ([]*types.User, error) {
 func (m *mockUserCastle) CreateOrganizer(types.Organizer) error {
 	return nil
 }
+
+func (m *mockUserCastle) GetAdministratorByID(id int) (*types.Administrator, error) {
+	return nil, nil
+}
+
+func (m *mockUserCastle) GetOrganizerByID(id int) (*types.Organizer, error) {
+	return nil, nil
+}
+
+func (m *mockUserCastle) CreateAdministrator(types.Administrator) error {
+	return nil
+}
