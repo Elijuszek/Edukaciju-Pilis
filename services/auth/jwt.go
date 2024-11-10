@@ -20,6 +20,8 @@ const UserKey contextKey = "userID"
 
 const RoleKey contextKey = "role"
 
+const RefreshTokenExpiry = time.Hour * 24
+
 func WithJWTAuth(handlerFunc http.HandlerFunc, castle types.UserCastle, requiredRoles ...string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := utils.GetTokenFromRequest(r)
@@ -109,4 +111,45 @@ func hasRequiredRole(userRole string, requiredRoles []string) bool {
 		}
 	}
 	return false
+}
+
+func CreateRefreshToken(secret []byte, userID int) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"userID":    strconv.Itoa(userID),
+		"expiredAt": time.Now().Add(RefreshTokenExpiry).Unix(),
+	})
+
+	tokenString, err := token.SignedString(secret)
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+
+func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	refreshToken := utils.GetTokenFromRequest(r)
+	token, err := ValidateJWT(refreshToken)
+	if err != nil || !token.Valid {
+		http.Error(w, "Invalid refresh token", http.StatusUnauthorized)
+		return
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	userID, err := strconv.Atoi(claims["userID"].(string))
+	if err != nil {
+		http.Error(w, "Invalid user ID in refresh token", http.StatusUnauthorized)
+		return
+	}
+
+	// Generate new access token
+	accessToken, err := CreateJWT([]byte(configs.Envs.JWTSecret), userID, claims["role"].(string))
+	if err != nil {
+		http.Error(w, "Failed to create access token", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the new access token
+	utils.WriteJSON(w, http.StatusOK, map[string]string{
+		"access_token": accessToken,
+	})
 }

@@ -79,12 +79,21 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found user role"))
 	}
-	token, err := auth.CreateJWT(secret, u.ID, role)
+	accessToken, err := auth.CreateJWT(secret, u.ID, role)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
-	utils.WriteJSON(w, http.StatusOK, map[string]string{"token": token})
+	refreshToken, err := auth.CreateRefreshToken(secret, u.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	// TODO
+	utils.WriteJSON(w, http.StatusOK, map[string]string{
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
 }
 
 // RegisterUser godoc

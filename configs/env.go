@@ -34,7 +34,7 @@ func initConfig() Config {
 		DBName:     getEnv("DB_NAME", "educations"),
 		JWTSecret: getEnv("JWT_SECRET",
 			"not-secret-secret-anymore"),
-		JWTExpirationInSeconds: getEnvAsInt("JWT_EXP", 3600*24*7),
+		JWTExpirationInSeconds: getEnvAsInt("JWT_EXP", 3600),
 	}
 }
 
