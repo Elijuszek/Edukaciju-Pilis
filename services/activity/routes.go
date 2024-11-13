@@ -90,8 +90,18 @@ func (h *Handler) handleCreateActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if the user has ownership of the resource
+	activityPackage, err := h.activityCastle.GetPackageByID(payload.FkPackageID)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
+	}
+	if !auth.CheckOwnership(r, activityPackage.FkOrganizerID) {
+		utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
+		return
+	}
+
 	// check if the activity exists inside package
-	_, err := h.activityCastle.GetActivityInsidePackageByName(payload.Name, payload.FkPackageID)
+	_, err = h.activityCastle.GetActivityInsidePackageByName(payload.Name, payload.FkPackageID)
 	if err == nil {
 		utils.WriteError(w, http.StatusUnprocessableEntity, fmt.Errorf("activity with name %s inside package already exists", payload.Name))
 		return
@@ -194,8 +204,8 @@ func (h *Handler) handleUpdateActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the review exists
-	existingReview, err := h.activityCastle.GetActivityByID(activityID)
+	// Check if the activity exists
+	existingActivity, err := h.activityCastle.GetActivityByID(activityID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity not found"))
@@ -205,9 +215,19 @@ func (h *Handler) handleUpdateActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if the user has ownership of the resource
+	organizer, err := h.userCastle.GetOrganizerByActivityID(existingActivity.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
+	}
+	if !auth.CheckOwnership(r, organizer.ID) {
+		utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
+		return
+	}
+
 	// Update the review
 	updateActivity := types.Activity{
-		ID:          existingReview.ID,
+		ID:          existingActivity.ID,
 		Name:        payload.Name,
 		Description: payload.Description,
 		BasePrice:   payload.BasePrice,
@@ -260,6 +280,15 @@ func (h *Handler) handleDeleteActivity(w http.ResponseWriter, r *http.Request) {
 		}
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error fetching activity: %w", err))
 		return
+	}
+
+	// Check if the user has ownership of the resource
+	organizer, err := h.userCastle.GetOrganizerByActivityID(existingActivity.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
+	}
+	if !auth.CheckOwnership(r, organizer.ID) {
+		utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
 	}
 
 	// Attempt to delete the review
@@ -347,6 +376,11 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if the user has ownership of the resource
+	if !auth.CheckOwnership(r, payload.FkOrganizerID) {
+		utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
+	}
+
 	// if not create
 	err = h.activityCastle.CreatePackage(types.Package{
 		Name:          payload.Name,
@@ -374,30 +408,44 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /packages/delete/{packageID} [delete]
 func (h *Handler) handleDeletePackage(w http.ResponseWriter, r *http.Request) {
-	// get JSON payload
-	var payload struct {
-		ID int `json:"id" validate:"required"`
-	}
-
-	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+	// Get the review ID from the URL parameters
+	vars := mux.Vars(r)
+	str, ok := vars["packageID"]
+	if !ok {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing package ID"))
 		return
 	}
 
-	// validate the payload
-	if err := utils.Validate.Struct(payload); err != nil {
-		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid package ID %v", errors))
+	// Convert package ID from string to int
+	packageID, err := strconv.Atoi(str)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid package ID"))
 		return
+	}
+
+	// check if the package exists
+	activityPackage, err := h.activityCastle.GetPackageByID(packageID)
+	if err == nil {
+		utils.WriteError(w, http.StatusUnprocessableEntity, fmt.Errorf("package with id %d already exists", packageID))
+		return
+	}
+
+	// Check if the user has ownership of the resource
+	organizer, err := h.userCastle.GetOrganizerByActivityID(activityPackage.FkOrganizerID)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
+	}
+	if !auth.CheckOwnership(r, organizer.ID) {
+		utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
 	}
 
 	// delete package
-	err := h.activityCastle.DeletePackage(payload.ID)
+	err = h.activityCastle.DeletePackage(packageID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to delete package: %v", err))
 		return
 	}
 
 	// TODO: status NO content
-	utils.WriteJSON(w, http.StatusAccepted, fmt.Sprintf("package with id %d successfully deleted", payload.ID))
+	utils.WriteJSON(w, http.StatusAccepted, fmt.Sprintf("package with id %d successfully deleted", packageID))
 }

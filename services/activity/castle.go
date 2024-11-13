@@ -248,6 +248,26 @@ func (c *Castle) CreatePackage(p types.Package) error {
 	return nil
 }
 
+func (c *Castle) GetPackageByID(id int) (*types.Package, error) {
+	rows, err := c.db.Query("SELECT * FROM package WHERE id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	p := new(types.Package)
+	for rows.Next() {
+		p, err = scanRowIntoPackage(rows)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if p.ID == 0 {
+		return nil, fmt.Errorf("package not found")
+	}
+
+	return p, nil
+}
+
 func (c *Castle) GetPackageByName(name string) (*types.Package, error) {
 	rows, err := c.db.Query("SELECT * FROM package WHERE name = ?", name)
 	if err != nil {

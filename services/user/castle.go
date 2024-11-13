@@ -128,6 +128,33 @@ func (c *Castle) GetOrganizerByID(id int) (*types.Organizer, error) {
 	return u, nil
 }
 
+func (c *Castle) GetOrganizerByActivityID(activityID int) (*types.Organizer, error) {
+	query := `
+    SELECT o.*
+    FROM organizer o
+    JOIN package p ON o.ID = p.FkOrganizerId
+    JOIN activity a ON p.ID = a.FkPackageId
+    WHERE a.ID = ?`
+
+	rows, err := c.db.Query(query, activityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	u := new(types.Organizer)
+	if rows.Next() {
+		u, err = scanRowIntOrganizer(rows)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, sql.ErrNoRows
+	}
+
+	return u, nil
+}
+
 func (c *Castle) GetAdministratorByID(id int) (*types.Administrator, error) {
 	rows, err := c.db.Query("SELECT * FROM administrator WHERE id = ?", id)
 	if err != nil {

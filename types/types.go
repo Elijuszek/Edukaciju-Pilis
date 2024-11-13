@@ -173,9 +173,11 @@ type ReviewPayload struct {
 // Interfaces
 type UserCastle interface {
 	GetUserByID(id int) (*User, error)
-	GetAdministratorByID(id int) (*Administrator, error)
-	GetOrganizerByID(id int) (*Organizer, error)
 
+	GetAdministratorByID(id int) (*Administrator, error)
+
+	GetOrganizerByID(id int) (*Organizer, error)
+	GetOrganizerByActivityID(activityID int) (*Organizer, error)
 	GetUserByUsername(username string) (*User, error)
 	GetUserByEmail(email string) (*User, error)
 	CreateUser(User) error
@@ -196,6 +198,7 @@ type ActivityCastle interface {
 	ListActivities() ([]*Activity, error)
 	FilterActivities(ActivityFilterPayload) ([]*Activity, error)
 
+	GetPackageByID(id int) (*Package, error)
 	CreatePackage(Package) error
 	DeletePackage(id int) error
 	GetPackageByName(name string) (*Package, error)

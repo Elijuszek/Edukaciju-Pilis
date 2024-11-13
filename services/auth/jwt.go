@@ -153,3 +153,13 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 		"access_token": accessToken,
 	})
 }
+
+func CheckOwnership(r *http.Request, resourceOwnerID int) bool {
+	role := r.Context().Value(RoleKey).(string)
+	if role == "administrator" {
+		return true // Administrators can modify any resource
+	}
+
+	userID := r.Context().Value(UserKey).(int)
+	return userID == resourceOwnerID // Regular users can modify only their resources
+}

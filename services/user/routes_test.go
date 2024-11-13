@@ -113,3 +113,6 @@ func (m *mockUserCastle) GetOrganizerByID(id int) (*types.Organizer, error) {
 func (m *mockUserCastle) CreateAdministrator(types.Administrator) error {
 	return nil
 }
+func (m *mockUserCastle) GetOrganizerByActivityID(id int) (*types.Organizer, error) {
+	return nil, nil
+}
