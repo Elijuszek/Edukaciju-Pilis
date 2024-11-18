@@ -28,7 +28,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 	router.HandleFunc("/users", auth.WithJWTAuth(h.handleListUsers, h.castle, "administrator")).Methods("GET")
 
-	router.HandleFunc("/users/{userID:[0-9]+}", auth.WithJWTAuth(h.handleGetUser, h.castle, "administrator")).Methods(("GET"))
+	router.HandleFunc("/users/{userID:[0-9]+}", auth.WithJWTAuth(h.handleGetUser, h.castle, "administrator", "organizer", "user")).Methods(("GET"))
 	router.HandleFunc("/users/update/{userID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateUser, h.castle, "administrator", "organizer", "user")).Methods("PUT")
 	router.HandleFunc("/users/delete/{userID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteUser, h.castle, "administrator", "organizer", "user")).Methods(("DELETE"))
 
@@ -273,6 +273,11 @@ func (h *Handler) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !auth.CheckOwnership(r, existingUser.ID) {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
+		return
+	}
+
 	_, err = h.castle.GetUserByEmail(payload.Email)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with new email %s already exists", payload.Email))
@@ -343,6 +348,11 @@ func (h *Handler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error fetching review: %w", err))
+		return
+	}
+
+	if !auth.CheckOwnership(r, existingUser.ID) {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
 		return
 	}
 

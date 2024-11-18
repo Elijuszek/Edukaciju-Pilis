@@ -195,6 +195,11 @@ func (h *Handler) handleUpdateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !auth.CheckOwnership(r, existingReview.FkUserID) {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
+		return
+	}
+
 	// Update the review
 	updatedReview := types.Review{
 		ID:           reviewID,
@@ -246,6 +251,11 @@ func (h *Handler) handleDeleteReview(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("error fetching review: %w", err))
+		return
+	}
+
+	if !auth.CheckOwnership(r, existingReview.FkUserID) {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
 		return
 	}
 

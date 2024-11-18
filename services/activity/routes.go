@@ -96,7 +96,7 @@ func (h *Handler) handleCreateActivity(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
 	}
 	if !auth.CheckOwnership(r, activityPackage.FkOrganizerID) {
-		utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
 		return
 	}
 
@@ -221,7 +221,7 @@ func (h *Handler) handleUpdateActivity(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
 	}
 	if !auth.CheckOwnership(r, organizer.ID) {
-		utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
 		return
 	}
 
@@ -288,7 +288,7 @@ func (h *Handler) handleDeleteActivity(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
 	}
 	if !auth.CheckOwnership(r, organizer.ID) {
-		utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
 	}
 
 	// Attempt to delete the review
@@ -378,7 +378,7 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the user has ownership of the resource
 	if !auth.CheckOwnership(r, payload.FkOrganizerID) {
-		utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
 	}
 
 	// if not create
@@ -436,7 +436,7 @@ func (h *Handler) handleDeletePackage(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
 	}
 	if !auth.CheckOwnership(r, organizer.ID) {
-		utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
 	}
 
 	// delete package
