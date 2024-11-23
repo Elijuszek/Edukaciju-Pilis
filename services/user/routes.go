@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 )
 
@@ -25,6 +26,7 @@ func NewHandler(castle types.UserCastle) *Handler {
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/users/login", h.handleLogin).Methods(("POST"))
 	router.HandleFunc("/users/register", h.handleRegister).Methods(("POST"))
+	router.HandleFunc("/users/logout", auth.WithJWTAuth(h.handleLogout, h.castle)).Methods("POST")
 
 	router.HandleFunc("/users", auth.WithJWTAuth(h.handleListUsers, h.castle, "administrator")).Methods("GET")
 
@@ -34,6 +36,66 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 	router.HandleFunc("/users/create-organizer", auth.WithJWTAuth(h.handleCreateOrganizer, h.castle, "administrator")).Methods(("POST"))
 	router.HandleFunc("/users/create-administrator", auth.WithJWTAuth(h.handleCreateAdministrator, h.castle, "administrator")).Methods(("POST"))
+}
+
+// RegisterUser godoc
+// @Summary      Create a new user account
+// @Description  Create a new user by specifying the user information (username, email, password).
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Param        payload  body      types.UserPayload  true  "User registration data"
+// @Success      201  {object}   types.UserResponse  "User successfully created"
+// @Failure      400  {object}   types.ErrorResponse "invalud payload"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /users/register [post]
+func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
+	// get JSON payload
+	var payload types.UserPayload
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+		return
+	}
+
+	// check if the user exists
+	_, err := h.castle.GetUserByEmail(payload.Email)
+	if err == nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", payload.Email))
+		return
+	}
+
+	_, err = h.castle.GetUserByUsername(payload.Username)
+	if err == nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with username %s already exists", payload.Username))
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(payload.Password)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// if it doesnt  create the new user
+	err = h.castle.CreateUser(types.User{
+		Username: payload.Username,
+		Password: hashedPassword,
+		Email:    payload.Email,
+	})
+
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("User %s successfully registered", payload.Username))
 }
 
 // LoginUser godoc
@@ -96,64 +158,30 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// RegisterUser godoc
-// @Summary      Create a new user account
-// @Description  Create a new user by specifying the user information (username, email, password).
-// @Tags         user
-// @Accept       json
-// @Produce      json
-// @Param        payload  body      types.UserPayload  true  "User registration data"
-// @Success      201  {object}   types.UserResponse  "User successfully created"
-// @Failure      400  {object}   types.ErrorResponse "invalud payload"
-// @Failure      500  {object}   types.ErrorResponse "Internal server error"
-// @Router       /users/register [post]
-func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
-	// get JSON payload
-	var payload types.UserPayload
-	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
+	// Extract the token from the request
+	tokenString := utils.GetTokenFromRequest(r)
+
+	// Validate the token
+	token, err := auth.ValidateJWT(tokenString)
+	if err != nil || !token.Valid {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid token, unable to logout"))
 		return
 	}
 
-	// validate the payload
-	if err := utils.Validate.Struct(payload); err != nil {
-		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+	// Get claims and extract the expiration time
+	claims := token.Claims.(jwt.MapClaims)
+	expiration, ok := claims["expiredAt"].(float64)
+	if !ok {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("couldn't parse token expiration"))
 		return
 	}
 
-	// check if the user exists
-	_, err := h.castle.GetUserByEmail(payload.Email)
-	if err == nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", payload.Email))
-		return
-	}
+	// Add the token to the blacklist
+	auth.AddTokenToBlacklist(tokenString, int64(expiration))
 
-	_, err = h.castle.GetUserByUsername(payload.Username)
-	if err == nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with username %s already exists", payload.Username))
-		return
-	}
-
-	hashedPassword, err := auth.HashPassword(payload.Password)
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	// if it doesnt  create the new user
-	err = h.castle.CreateUser(types.User{
-		Username: payload.Username,
-		Password: hashedPassword,
-		Email:    payload.Email,
-	})
-
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("User %s successfully registered", payload.Username))
+	// Respond with a successful logout message
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "successfully logged out"})
 }
 
 // ListUsers godoc

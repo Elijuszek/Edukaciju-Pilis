@@ -12,12 +12,13 @@ type Config struct {
 	PublicHost string
 	Port       string
 
-	DBUser                 string
-	DBPassword             string
-	DBAddress              string
-	DBName                 string
-	JWTExpirationInSeconds int64
-	JWTSecret              string
+	DBUser                          string
+	DBPassword                      string
+	DBAddress                       string
+	DBName                          string
+	JWTSecret                       string
+	JWTExpirationInSeconds          int64
+	RefreshTokenExpirationInSeconds int64
 }
 
 var Envs = initConfig()
@@ -34,7 +35,8 @@ func initConfig() Config {
 		DBName:     getEnv("DB_NAME", "educations"),
 		JWTSecret: getEnv("JWT_SECRET",
 			"not-secret-secret-anymore"),
-		JWTExpirationInSeconds: getEnvAsInt("JWT_EXP", 3600),
+		JWTExpirationInSeconds:          getEnvAsInt("JWT_EXP", 600),
+		RefreshTokenExpirationInSeconds: getEnvAsInt("REFRESH_TOKEN_EXP", 86400),
 	}
 }
 

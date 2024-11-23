@@ -5,7 +5,6 @@ import (
 	"educations-castle/types"
 	"educations-castle/utils"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -17,10 +16,9 @@ import (
 type contextKey string
 
 const UserKey contextKey = "userID"
-
 const RoleKey contextKey = "role"
 
-const RefreshTokenExpiry = time.Hour * 24
+var tokenBlacklist = make(map[string]time.Time)
 
 func WithJWTAuth(handlerFunc http.HandlerFunc, castle types.UserCastle, requiredRoles ...string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +26,6 @@ func WithJWTAuth(handlerFunc http.HandlerFunc, castle types.UserCastle, required
 		token, err := ValidateJWT(tokenString)
 
 		if err != nil || !token.Valid {
-			log.Printf("Invalid or failed token validation: %v", err)
 			PermissionDenied(w)
 			return
 		}
@@ -36,7 +33,6 @@ func WithJWTAuth(handlerFunc http.HandlerFunc, castle types.UserCastle, required
 		claims := token.Claims.(jwt.MapClaims)
 		userID, err := strconv.Atoi(claims["userID"].(string))
 		if err != nil {
-			log.Printf("Failed to convert UserID to int: %v", err)
 			PermissionDenied(w)
 			return
 		}
@@ -44,14 +40,12 @@ func WithJWTAuth(handlerFunc http.HandlerFunc, castle types.UserCastle, required
 		// Retrieve role from claims
 		role, ok := claims["role"].(string)
 		if !ok {
-			log.Printf("Role missing in token claims")
 			PermissionDenied(w)
 			return
 		}
 
 		// Verify that user has the required role
 		if !hasRequiredRole(role, requiredRoles) {
-			log.Printf("User does not have required role (required %s): %s", requiredRoles, role)
 			PermissionDenied(w)
 			return
 		}
@@ -63,16 +57,6 @@ func WithJWTAuth(handlerFunc http.HandlerFunc, castle types.UserCastle, required
 
 		handlerFunc(w, r)
 	}
-}
-
-func ValidateJWT(tokenString string) (*jwt.Token, error) {
-	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-
-		return []byte(configs.Envs.JWTSecret), nil
-	})
 }
 
 func CreateJWT(secret []byte, userID int, role string) (string, error) {
@@ -91,8 +75,34 @@ func CreateJWT(secret []byte, userID int, role string) (string, error) {
 	return tokenString, nil
 }
 
+func ValidateJWT(tokenString string) (*jwt.Token, error) {
+	if isTokenBlacklisted(tokenString) {
+		return nil, fmt.Errorf("token is blacklisted")
+	}
+
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(configs.Envs.JWTSecret), nil
+	})
+}
+
+func AddTokenToBlacklist(tokenString string, expiration int64) {
+	expirationTime := time.Unix(expiration, 0)
+	tokenBlacklist[tokenString] = expirationTime
+}
+
+func isTokenBlacklisted(tokenString string) bool {
+	if expiration, ok := tokenBlacklist[tokenString]; ok {
+		return time.Now().Before(expiration)
+	}
+	return false
+}
+
 func PermissionDenied(w http.ResponseWriter) {
-	utils.WriteError(w, http.StatusForbidden, fmt.Errorf("permission denied"))
+	utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
 }
 
 func GetUserIDFromContext(ctx context.Context) int {
@@ -105,6 +115,11 @@ func GetUserIDFromContext(ctx context.Context) int {
 }
 
 func hasRequiredRole(userRole string, requiredRoles []string) bool {
+	// If no roles are required, all valid users should pass
+	if len(requiredRoles) == 0 {
+		return true
+	}
+
 	for _, role := range requiredRoles {
 		if userRole == role {
 			return true
@@ -114,9 +129,10 @@ func hasRequiredRole(userRole string, requiredRoles []string) bool {
 }
 
 func CreateRefreshToken(secret []byte, userID int) (string, error) {
+	expiration := time.Second * time.Duration(configs.Envs.RefreshTokenExpirationInSeconds)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID":    strconv.Itoa(userID),
-		"expiredAt": time.Now().Add(RefreshTokenExpiry).Unix(),
+		"expiredAt": time.Now().Add(expiration).Unix(),
 	})
 
 	tokenString, err := token.SignedString(secret)
