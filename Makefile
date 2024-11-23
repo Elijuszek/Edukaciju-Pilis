@@ -16,3 +16,6 @@ migrate-up:
 migrate-down:
 	@go run cmd/migrate/main.go down
 	
+docker-build:
+	@echo "Building the Docker image..."
+	@docker build -f Dockerfile -t go-containerized:latest .

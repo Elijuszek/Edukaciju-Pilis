@@ -2,12 +2,9 @@ package color
 
 import (
 	"fmt"
-	"os"
 
-	"golang.org/x/sys/windows"
+	"github.com/fatih/color"
 )
-
-const escape = "\x1b"
 
 const (
 	NONE = iota
@@ -18,22 +15,28 @@ const (
 	PURPLE
 )
 
-func color(c int) string {
-	if c == NONE {
-		return fmt.Sprintf("%s[%dm", escape, c)
-	}
-
-	return fmt.Sprintf("%s[3%dm", escape, c)
-}
-
 func Format(c int, text string) string {
-	return color(c) + text + color(NONE)
+	switch c {
+	case RED:
+		return color.New(color.FgRed).SprintFunc()(text)
+	case GREEN:
+		return color.New(color.FgGreen).SprintFunc()(text)
+	case YELLOW:
+		return color.New(color.FgYellow).SprintFunc()(text)
+	case BLUE:
+		return color.New(color.FgBlue).SprintFunc()(text)
+	case PURPLE:
+		return color.New(color.FgMagenta).SprintFunc()(text)
+	default:
+		return text
+	}
 }
 
-func init() {
-	stdout := windows.Handle(os.Stdout.Fd())
-	var originalMode uint32
-
-	windows.GetConsoleMode(stdout, &originalMode)
-	windows.SetConsoleMode(stdout, originalMode|windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+func main() {
+	fmt.Println(Format(RED, "This is red text"))
+	fmt.Println(Format(GREEN, "This is green text"))
+	fmt.Println(Format(YELLOW, "This is yellow text"))
+	fmt.Println(Format(BLUE, "This is blue text"))
+	fmt.Println(Format(PURPLE, "This is purple text"))
+	fmt.Println(Format(NONE, "This is normal text"))
 }

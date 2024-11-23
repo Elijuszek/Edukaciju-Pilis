@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -19,6 +18,8 @@ type Config struct {
 	JWTSecret                       string
 	JWTExpirationInSeconds          int64
 	RefreshTokenExpirationInSeconds int64
+	SslMode                         string
+	CACertPath                      string
 }
 
 var Envs = initConfig()
@@ -30,13 +31,15 @@ func initConfig() Config {
 		PublicHost: getEnv("PUBLIC_HOST", "http://localhost"),
 		Port:       getEnv("PORT", "8080"),
 		DBUser:     getEnv("DB_USER", "root"),
-		DBPassword: getEnv("DB_PASSWORD", ""),
-		DBAddress:  fmt.Sprintf("%s:%s", getEnv("DB_HOST", "127.0.0.1"), getEnv("DB_PORT", "3306")),
+		DBPassword: getEnv("DB_PASS", ""),
+		DBAddress:  getEnv("DB_HOST", "127.0.0.1"),
 		DBName:     getEnv("DB_NAME", "educations"),
 		JWTSecret: getEnv("JWT_SECRET",
 			"not-secret-secret-anymore"),
 		JWTExpirationInSeconds:          getEnvAsInt("JWT_EXP", 600),
 		RefreshTokenExpirationInSeconds: getEnvAsInt("REFRESH_TOKEN_EXP", 86400),
+		SslMode:                         getEnv("SSL_MODE", "disable"),
+		CACertPath:                      getEnv("CA_CERT_PATH", ""),
 	}
 }
 

@@ -3,6 +3,7 @@
 bin
 tmp
 ecom
+ca-certificate.crt
 
 # VS code
 .vscode/*

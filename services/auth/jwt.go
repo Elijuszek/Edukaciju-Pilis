@@ -179,3 +179,13 @@ func CheckOwnership(r *http.Request, resourceOwnerID int) bool {
 	userID := r.Context().Value(UserKey).(int)
 	return userID == resourceOwnerID // Regular users can modify only their resources
 }
+
+// TODO: prevent running out of memory by cleaning up expired tokens
+func cleanupExpiredTokens(blacklist map[string]time.Time) {
+	currentTime := time.Now()
+	for token, expiryTime := range blacklist {
+		if currentTime.After(expiryTime) {
+			delete(blacklist, token)
+		}
+	}
+}
