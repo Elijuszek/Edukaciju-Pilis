@@ -29,7 +29,7 @@ func initConfig() Config {
 
 	return Config{
 		PublicHost: getEnv("PUBLIC_HOST", "http://localhost"),
-		Port:       getEnv("PORT", "8080"),
+		Port:       getEnv("LISTEN_PORT", "8080"),
 		DBUser:     getEnv("DB_USER", "root"),
 		DBPassword: getEnv("DB_PASS", ""),
 		DBAddress:  getEnv("DB_HOST", "127.0.0.1"),
