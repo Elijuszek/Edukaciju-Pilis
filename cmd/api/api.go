@@ -29,6 +29,7 @@ func NewAPIServer(addr string, db *sql.DB) *APIServer {
 
 func (s *APIServer) Run() error {
 	router := mux.NewRouter()
+	router.Use(corsMiddleware) // Apply CORS middleware here
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
@@ -49,4 +50,19 @@ func (s *APIServer) Run() error {
 
 	log.Println(color.Format(color.GREEN, "Listening on "+s.addr))
 	return http.ListenAndServe(s.addr, router)
+}
+
+// CORS middleware to add CORS headers to the HTTP response
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
