@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS `review` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `date` DATE NOT NULL DEFAULT CURRENT_DATE,
+  `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `comment` varchar(255) DEFAULT NULL,
   `rating` int(11) NOT NULL,
   `fk_Userid` int(11) NOT NULL,
