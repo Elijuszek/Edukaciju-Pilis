@@ -37,6 +37,13 @@ func WithJWTAuth(handlerFunc http.HandlerFunc, castle types.UserCastle, required
 			return
 		}
 
+		// Check if the user still exists
+		user, err := castle.GetUserByID(userID)
+		if err != nil || user == nil {
+			PermissionDenied(w)
+			return
+		}
+
 		// Retrieve role from claims
 		role, ok := claims["role"].(string)
 		if !ok {
