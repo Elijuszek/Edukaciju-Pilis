@@ -24,8 +24,8 @@ func NewHandler(castle types.UserCastle) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/users/login", h.handleLogin).Methods(("POST"))
-	router.HandleFunc("/users/register", h.handleRegister).Methods(("POST"))
+	router.HandleFunc("/users/login", h.handleLogin).Methods("POST", "OPTIONS")
+	router.HandleFunc("/users/register", h.handleRegister).Methods("POST", "OPTIONS")
 	router.HandleFunc("/users/logout", auth.WithJWTAuth(h.handleLogout, h.castle)).Methods("POST")
 
 	router.HandleFunc("/users", auth.WithJWTAuth(h.handleListUsers, h.castle, "administrator")).Methods("GET")
