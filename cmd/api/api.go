@@ -29,9 +29,10 @@ func NewAPIServer(addr string, db *sql.DB) *APIServer {
 
 func (s *APIServer) Run() error {
 	router := mux.NewRouter()
-	router.Use(corsMiddleware) // Apply CORS middleware here
+	// router.Use(corsMiddleware) // Apply CORS middleware here
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
+	subrouter.Use(corsMiddleware) // Apply CORS middleware here
 
 	// User
 	userCastle := user.NewCastle(s.db)
