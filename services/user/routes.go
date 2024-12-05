@@ -26,16 +26,16 @@ func NewHandler(castle types.UserCastle) *Handler {
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/users/login", h.handleLogin).Methods("POST", "OPTIONS")
 	router.HandleFunc("/users/register", h.handleRegister).Methods("POST", "OPTIONS")
-	router.HandleFunc("/users/logout", auth.WithJWTAuth(h.handleLogout, h.castle)).Methods("POST")
+	router.HandleFunc("/users/logout", auth.WithJWTAuth(h.handleLogout, h.castle)).Methods("POST", "OPTIONS")
 
 	router.HandleFunc("/users", auth.WithJWTAuth(h.handleListUsers, h.castle, "administrator")).Methods("GET")
 
 	router.HandleFunc("/users/{userID:[0-9]+}", auth.WithJWTAuth(h.handleGetUser, h.castle, "administrator", "organizer", "user")).Methods(("GET"))
-	router.HandleFunc("/users/update/{userID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateUser, h.castle, "administrator", "organizer", "user")).Methods("PUT")
-	router.HandleFunc("/users/delete/{userID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteUser, h.castle, "administrator", "organizer", "user")).Methods(("DELETE"))
+	router.HandleFunc("/users/update/{userID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateUser, h.castle, "administrator", "organizer", "user")).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/users/delete/{userID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteUser, h.castle, "administrator", "organizer", "user")).Methods("DELETE", "OPTIONS")
 
-	router.HandleFunc("/users/create-organizer", auth.WithJWTAuth(h.handleCreateOrganizer, h.castle, "administrator")).Methods(("POST"))
-	router.HandleFunc("/users/create-administrator", auth.WithJWTAuth(h.handleCreateAdministrator, h.castle, "administrator")).Methods(("POST"))
+	router.HandleFunc("/users/create-organizer", auth.WithJWTAuth(h.handleCreateOrganizer, h.castle, "administrator")).Methods("POST", "OPTIONS")
+	router.HandleFunc("/users/create-administrator", auth.WithJWTAuth(h.handleCreateAdministrator, h.castle, "administrator")).Methods("POST", "OPTIONS")
 }
 
 // RegisterUser godoc

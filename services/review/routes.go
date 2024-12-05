@@ -26,10 +26,10 @@ func NewHandler(reviewCastle types.ReviewCastle, userCastle types.UserCastle) *H
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/reviews", h.handleListReviews).Methods(("GET"))
-	router.HandleFunc("/reviews/create", auth.WithJWTAuth(h.handleCreateReview, h.userCastle, "administrator", "user")).Methods(("POST"))
+	router.HandleFunc("/reviews/create", auth.WithJWTAuth(h.handleCreateReview, h.userCastle, "administrator", "user")).Methods("POST", "OPTIONS")
 	router.HandleFunc("/reviews/{reviewID}", h.handleGetReview).Methods(("GET"))
-	router.HandleFunc("/reviews/update/{reviewID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateReview, h.userCastle, "administrator", "user")).Methods("PUT")
-	router.HandleFunc("/reviews/delete/{reviewID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteReview, h.userCastle, "administrator", "organizer")).Methods("DELETE")
+	router.HandleFunc("/reviews/update/{reviewID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateReview, h.userCastle, "administrator", "user")).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/reviews/delete/{reviewID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteReview, h.userCastle, "administrator", "organizer")).Methods("DELETE", "OPTIONS")
 	router.HandleFunc("/package/{packageID:[0-9]+}/reviews", h.handleListReviewsFromPackage).Methods(("GET"))
 }
 

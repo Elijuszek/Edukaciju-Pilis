@@ -27,15 +27,15 @@ func NewHandler(activityCastle types.ActivityCastle, userCastle types.UserCastle
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/activities", h.handleListActivities).Methods(("GET"))
-	router.HandleFunc("/activities/create", auth.WithJWTAuth(h.handleCreateActivity, h.userCastle, "administrator", "organizer")).Methods(("POST"))
+	router.HandleFunc("/activities/create", auth.WithJWTAuth(h.handleCreateActivity, h.userCastle, "administrator", "organizer")).Methods("POST", "OPTIONS")
 	router.HandleFunc("/activities/{activityID:[0-9]+}", h.handleGetActivity).Methods(("GET"))
-	router.HandleFunc("/activities/update/{activityID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateActivity, h.userCastle, "administrator", "organizer")).Methods(("PUT"))
-	router.HandleFunc("/activities/delete/{activityID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteActivity, h.userCastle, "administrator", "organizer")).Methods(("DELETE"))
+	router.HandleFunc("/activities/update/{activityID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateActivity, h.userCastle, "administrator", "organizer")).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/activities/delete/{activityID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteActivity, h.userCastle, "administrator", "organizer")).Methods("DELETE", "OPTIONS")
 
 	router.HandleFunc("/activities/filter", h.handleFilterActivities).Methods(("GET"))
 
-	router.HandleFunc("/packages/create", auth.WithJWTAuth(h.handleCreatePackage, h.userCastle, "administrator", "organizer")).Methods(("POST"))
-	router.HandleFunc("/packages/delete/{packageID:[0-9]+}", auth.WithJWTAuth(h.handleDeletePackage, h.userCastle, "administrator", "organizer")).Methods(("DELETE"))
+	router.HandleFunc("/packages/create", auth.WithJWTAuth(h.handleCreatePackage, h.userCastle, "administrator", "organizer")).Methods("POST", "OPTIONS")
+	router.HandleFunc("/packages/delete/{packageID:[0-9]+}", auth.WithJWTAuth(h.handleDeletePackage, h.userCastle, "administrator", "organizer")).Methods("DELETE", "OPTIONS")
 
 }
 
