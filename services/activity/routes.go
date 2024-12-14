@@ -32,7 +32,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/activities/update/{activityID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateActivity, h.userCastle, "administrator", "organizer")).Methods("PUT", "OPTIONS")
 	router.HandleFunc("/activities/delete/{activityID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteActivity, h.userCastle, "administrator", "organizer")).Methods("DELETE", "OPTIONS")
 
-	router.HandleFunc("/activities/filter", h.handleFilterActivities).Methods("GET", "OPTIONS")
+	router.HandleFunc("/activities/filter", h.handleFilterActivities).Methods(("GET"))
 
 	router.HandleFunc("/packages/create", auth.WithJWTAuth(h.handleCreatePackage, h.userCastle, "administrator", "organizer")).Methods("POST", "OPTIONS")
 	router.HandleFunc("/packages/delete/{packageID:[0-9]+}", auth.WithJWTAuth(h.handleDeletePackage, h.userCastle, "administrator", "organizer")).Methods("DELETE", "OPTIONS")
@@ -313,27 +313,60 @@ func (h *Handler) handleDeleteActivity(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /activities/filter [get]
 func (h *Handler) handleFilterActivities(w http.ResponseWriter, r *http.Request) {
-	// get JSON payload
+	// Define the payload
 	var payload types.ActivityFilterPayload
-	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
-		return
+
+	// Get query parameters and populate the payload
+	payload.Name = r.URL.Query().Get("name")
+	payload.Category = r.URL.Query().Get("Category")
+	payload.Organizer = r.URL.Query().Get("Organizer")
+
+	// Convert string parameters to integers
+	var err error
+	if minPrice := r.URL.Query().Get("minPrice"); minPrice != "" {
+		payload.MinPrice, err = utils.ParseStringToFloat32(minPrice)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid minPrice"))
+			return
+		}
+	}
+	if maxPrice := r.URL.Query().Get("maxPrice"); maxPrice != "" {
+		payload.MaxPrice, err = utils.ParseStringToFloat32(maxPrice)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid maxPrice"))
+			return
+		}
+	}
+	if minRating := r.URL.Query().Get("minRating"); minRating != "" {
+		payload.MinRating, err = strconv.Atoi(minRating)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid minRating"))
+			return
+		}
+	}
+	if maxRating := r.URL.Query().Get("maxRating"); maxRating != "" {
+		payload.MaxRating, err = strconv.Atoi(maxRating)
+		if err != nil {
+			utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid maxRating"))
+			return
+		}
 	}
 
-	// validate the payload
+	// Validate the payload (if needed)
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
 		return
 	}
 
+	// Call the FilterActivities method with the constructed payload
 	activities, err := h.activityCastle.FilterActivities(payload)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	// If no activities found, return a message
+	// If no activities are found, return an empty list
 	if len(activities) == 0 {
 		utils.WriteJSON(w, http.StatusOK, []types.Activity{})
 		return

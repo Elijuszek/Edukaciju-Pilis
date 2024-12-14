@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -39,4 +40,19 @@ func GetTokenFromRequest(r *http.Request) string {
 		return tokenQuery
 	}
 	return ""
+}
+func ParseStringToFloat32(myString string) (float32, error) {
+	value, err := strconv.ParseFloat(myString, 32)
+	if err != nil {
+		return 0, err
+	}
+	return float32(value), nil
+}
+
+func ParseStringToFloat64(myString string) (float64, error) {
+	value, err := strconv.ParseFloat(myString, 64)
+	if err != nil {
+		return 0, err
+	}
+	return value, nil
 }
