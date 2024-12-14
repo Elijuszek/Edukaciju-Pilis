@@ -184,14 +184,14 @@ func (c *Castle) FilterActivities(a types.ActivityFilterPayload) ([]*types.Activ
 		JOIN organizer ON package.fk_Organizerid = organizer.id
 		JOIN user ON organizer.id = user.id
 		WHERE
-			(activity.name LIKE COALESCE(NULLIF(?, ''), activity.name)) AND
-			(activity.basePrice >= COALESCE(NULLIF(?, 0), activity.basePrice)) AND
-			(activity.basePrice <= COALESCE(NULLIF(?, 0), activity.basePrice)) AND
-			(activity.averageRating >= COALESCE(NULLIF(?, 0), activity.averageRating)) AND
-			(activity.averageRating <= COALESCE(NULLIF(?, 0), activity.averageRating)) AND
-			(user.username LIKE COALESCE(NULLIF(?, ''), user.username)) AND
-			(activity.creationDate >= COALESCE(NULLIF(?, '1970-01-01'), activity.creationDate)) AND
-			(activity.creationDate <= COALESCE(NULLIF(?, '9999-12-31'), activity.creationDate))`
+			(activity.name LIKE COALESCE(NULLIF(?, ''), activity.name))
+			AND (activity.basePrice >= COALESCE(NULLIF(?, 0), activity.basePrice))
+			AND (activity.basePrice <= COALESCE(NULLIF(?, 0), activity.basePrice))
+			AND (activity.averageRating >= COALESCE(NULLIF(?, 0), activity.averageRating))
+			AND (activity.averageRating <= COALESCE(NULLIF(?, 0), activity.averageRating))
+			AND (user.username LIKE COALESCE(NULLIF(?, ''), user.username))
+			AND (activity.creationDate >= COALESCE(NULLIF(?, ''), '1970-01-01'))
+			AND (activity.creationDate <= COALESCE(NULLIF(?, ''), '9999-12-31'))`
 
 	// If category ID is found, add a filter for it
 	if a.Category != "" {
