@@ -1,6 +1,8 @@
 package types
 
-import "time"
+import (
+	"time"
+)
 
 // Activity represents activity such as education or event
 // swagger:model
@@ -198,9 +200,12 @@ type ActivityCastle interface {
 	DeleteActivity(id int) error
 	GetActivityInsidePackageByName(activityName string, packageID int) (*Activity, error)
 	ListActivities() ([]*Activity, error)
+	ListActivitiesInPackage(packageID int) ([]*Activity, error)
 	FilterActivities(ActivityFilterPayload) ([]*Activity, error)
 
+	ListPackages() ([]*Package, error)
 	GetPackageByID(id int) (*Package, error)
+	ListPackagesByOrganizerID(organizerID int) ([]*Package, error)
 	CreatePackage(Package) error
 	DeletePackage(id int) error
 	GetPackageByName(name string) (*Package, error)

@@ -61,7 +61,7 @@ func (c *Castle) ListActivities() ([]*types.Activity, error) {
 		return nil, err
 	}
 
-	var activity []*types.Activity
+	var activities []*types.Activity
 
 	for rows.Next() {
 		r := new(types.Activity)
@@ -69,14 +69,38 @@ func (c *Castle) ListActivities() ([]*types.Activity, error) {
 		if err != nil {
 			return nil, err
 		}
-		activity = append(activity, r)
+		activities = append(activities, r)
 	}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return activity, nil
+	return activities, nil
+}
+
+func (c *Castle) ListActivitiesInPackage(packageID int) ([]*types.Activity, error) {
+	rows, err := c.db.Query("SELECT * FROM activity WHERE fk_Packageid = ?", packageID)
+	if err != nil {
+		return nil, err
+	}
+
+	var activities []*types.Activity
+
+	for rows.Next() {
+		r := new(types.Activity)
+		r, err = scanRowIntoActivity(rows)
+		if err != nil {
+			return nil, err
+		}
+		activities = append(activities, r)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return activities, nil
 }
 
 func (c *Castle) CreateActivity(activity types.Activity) error {
@@ -290,6 +314,54 @@ func (c *Castle) GetPackageByName(name string) (*types.Package, error) {
 	}
 
 	return p, nil
+}
+
+func (c *Castle) ListPackages() ([]*types.Package, error) {
+	rows, err := c.db.Query("SELECT * FROM package")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var packages []*types.Package
+
+	for rows.Next() {
+		p, err := scanRowIntoPackage(rows)
+		if err != nil {
+			return nil, err
+		}
+		packages = append(packages, p)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return packages, nil
+}
+
+func (c *Castle) ListPackagesByOrganizerID(organizerID int) ([]*types.Package, error) {
+	rows, err := c.db.Query("SELECT * FROM package WHERE fk_Organizerid = ?", organizerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var packages []*types.Package
+
+	for rows.Next() {
+		p, err := scanRowIntoPackage(rows)
+		if err != nil {
+			return nil, err
+		}
+		packages = append(packages, p)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return packages, nil
 }
 
 func (c *Castle) DeletePackage(id int) error {

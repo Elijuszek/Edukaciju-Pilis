@@ -30,10 +30,11 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 	router.HandleFunc("/users", auth.WithJWTAuth(h.handleListUsers, h.castle, "administrator")).Methods("GET")
 
-	router.HandleFunc("/users/{userID:[0-9]+}", auth.WithJWTAuth(h.handleGetUser, h.castle, "administrator", "organizer", "user")).Methods("GET", "OPTIONS") // TODO: Check if correct
+	router.HandleFunc("/users/{userID:[0-9]+}", auth.WithJWTAuth(h.handleGetUser, h.castle, "administrator", "organizer", "user")).Methods("GET", "OPTIONS")
 	router.HandleFunc("/users/update/{userID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateUser, h.castle, "administrator", "organizer", "user")).Methods("PUT", "OPTIONS")
 	router.HandleFunc("/users/delete/{userID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteUser, h.castle, "administrator", "organizer", "user")).Methods("DELETE", "OPTIONS")
 
+	router.HandleFunc("/organizers/{organizerID:[0-9]+}", auth.WithJWTAuth(h.handleGetOrganizer, h.castle, "administrator", "organizer", "user")).Methods("GET", "OPTIONS")
 	router.HandleFunc("/users/create-organizer", auth.WithJWTAuth(h.handleCreateOrganizer, h.castle, "administrator")).Methods("POST", "OPTIONS")
 	router.HandleFunc("/users/create-administrator", auth.WithJWTAuth(h.handleCreateAdministrator, h.castle, "administrator")).Methods("POST", "OPTIONS")
 }
@@ -124,6 +125,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: GetUserByUsername and GetUserById also return hased password when it shouldn't
 	u, err := h.castle.GetUserByUsername(payload.Username)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found invalid username or password"))
@@ -246,6 +248,47 @@ func (h *Handler) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusOK, user)
+}
+
+// GetOrganizer godoc
+// @Summary      Get organizer by ID
+// @Description  Returns organizer with matching ID
+// @Tags         organizer
+// @Produce      json
+// @Param        organizerID  path      int  true  "Organizer ID"
+// @Success      200  {object}   types.Organizer
+// @Failure      400  {object}   types.ErrorResponse "missing organizer ID"
+// @Failure      400  {object}   types.ErrorResponse "invalid organizer ID"
+// @Failure      404  {object}   types.ErrorResponse "organizer not found"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /organizers/{organizerID} [get]
+func (h *Handler) handleGetOrganizer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	str, ok := vars["organizerID"]
+	if !ok {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing organizer ID"))
+		return
+	}
+
+	organizerID, err := strconv.Atoi(str)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid organizer ID"))
+		return
+	}
+
+	// Retrieve the organizer by ID
+	organizer, err := h.castle.GetOrganizerByID(organizerID)
+	if err != nil || organizer == nil {
+		if organizer == nil {
+			utils.WriteError(w, http.StatusNotFound, fmt.Errorf("organizer not found"))
+		} else {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+		}
+		return
+	}
+
+	// Return the organizer as a JSON response
+	utils.WriteJSON(w, http.StatusOK, organizer)
 }
 
 // UpdateUser godoc

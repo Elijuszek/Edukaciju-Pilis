@@ -27,6 +27,8 @@ func NewHandler(activityCastle types.ActivityCastle, userCastle types.UserCastle
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/activities", h.handleListActivities).Methods(("GET"))
+	router.HandleFunc("/activities", h.handleListActivities).Methods(("GET"))
+
 	router.HandleFunc("/activities/create", auth.WithJWTAuth(h.handleCreateActivity, h.userCastle, "administrator", "organizer")).Methods("POST", "OPTIONS")
 	router.HandleFunc("/activities/{activityID:[0-9]+}", h.handleGetActivity).Methods(("GET"))
 	router.HandleFunc("/activities/update/{activityID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateActivity, h.userCastle, "administrator", "organizer")).Methods("PUT", "OPTIONS")
@@ -34,6 +36,9 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 	router.HandleFunc("/activities/filter", h.handleFilterActivities).Methods(("GET"))
 
+	router.HandleFunc("/packages", h.handleListPackages).Methods("GET")
+	router.HandleFunc("/organizer/{organizerID:[0-9]+}/packages", h.handleListPackagesByOrganizer).Methods("GET")
+	router.HandleFunc("/packages/activities", h.handleListActivitiesInPackage).Methods("GET")
 	router.HandleFunc("/packages/create", auth.WithJWTAuth(h.handleCreatePackage, h.userCastle, "administrator", "organizer")).Methods("POST", "OPTIONS")
 	router.HandleFunc("/packages/delete/{packageID:[0-9]+}", auth.WithJWTAuth(h.handleDeletePackage, h.userCastle, "administrator", "organizer")).Methods("DELETE", "OPTIONS")
 
@@ -49,6 +54,56 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 // @Router       /activities [get]
 func (h *Handler) handleListActivities(w http.ResponseWriter, r *http.Request) {
 	activities, err := h.activityCastle.ListActivities()
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// If no activities found, return an empty array
+	if len(activities) == 0 {
+		utils.WriteJSON(w, http.StatusOK, []types.Activity{})
+		return
+	}
+
+	// Return the activities as a JSON response
+	utils.WriteJSON(w, http.StatusOK, activities)
+}
+
+// ListActivitiesInPackage godoc
+// @Summary      List activities in package
+// @Description  Returns a list of all activities within the specified package
+// @Tags         package
+// @Produce      json
+// @Param        packageID  query  int  true  "Package ID"
+// @Success      200  {array}    types.Activity
+// @Failure      400  {object}   types.ErrorResponse "Bad request"
+// @Failure      404  {object}   types.ErrorResponse "Package not found"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /packages/activities [get]
+func (h *Handler) handleListActivitiesInPackage(w http.ResponseWriter, r *http.Request) {
+	packageIDStr := r.URL.Query().Get("packageID")
+	if packageIDStr == "" {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing packageID"))
+		return
+	}
+
+	packageID, err := strconv.Atoi(packageIDStr)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error with payload"))
+		return
+	}
+
+	// Check if the package exists
+	if pkg, err := h.activityCastle.GetPackageByID(packageID); err != nil || pkg == nil {
+		if pkg == nil {
+			utils.WriteError(w, http.StatusNotFound, fmt.Errorf("package with ID not found"))
+		} else {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+		}
+		return
+	}
+
+	activities, err := h.activityCastle.ListActivitiesInPackage(packageID)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -393,6 +448,76 @@ func (h *Handler) handleFilterActivities(w http.ResponseWriter, r *http.Request)
 
 	// Return the activities as a JSON response
 	utils.WriteJSON(w, http.StatusOK, activities)
+}
+
+// ListPackages godoc
+// @Summary      List all packages
+// @Description  Returns list of all registered packages
+// @Tags         package
+// @Produce      json
+// @Success      200  {array}    types.Package
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /packages [get]
+func (h *Handler) handleListPackages(w http.ResponseWriter, r *http.Request) {
+	packages, err := h.activityCastle.ListPackages()
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// If no packages found, return an empty array
+	if len(packages) == 0 {
+		utils.WriteJSON(w, http.StatusOK, []types.Package{})
+		return
+	}
+
+	// Return the packages as a JSON response
+	utils.WriteJSON(w, http.StatusOK, packages)
+}
+
+// ListPackagesByOrganizer godoc
+// @Summary      List packages by organizer
+// @Description  Returns a list of packages for a specified organizer by ID
+// @Tags         package
+// @Produce      json
+// @Param        organizerID   path      int  true  "Organizer ID"
+// @Success      200  {array}    types.Package
+// @Failure      400  {object}   types.ErrorResponse "Bad request"
+// @Failure      404  {object}   types.ErrorResponse "Organizer not found"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /organizer/{organizerID}/packages [get]
+func (h *Handler) handleListPackagesByOrganizer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	organizerID, err := strconv.Atoi(vars["organizerID"])
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing organizerID"))
+		return
+	}
+
+	// Check if the user is an organizer
+	if organizer, err := h.userCastle.GetOrganizerByID(organizerID); err != nil || organizer == nil {
+		if organizer == nil {
+			utils.WriteError(w, http.StatusNotFound, fmt.Errorf("organizer not found"))
+		} else {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+		}
+		return
+	}
+
+	packages, err := h.activityCastle.ListPackagesByOrganizerID(organizerID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// If no packages found, return an empty array
+	if len(packages) == 0 {
+		utils.WriteJSON(w, http.StatusOK, []types.Package{})
+		return
+	}
+
+	// Return the packages as a JSON response
+	utils.WriteJSON(w, http.StatusOK, packages)
 }
 
 // CreatePackage godoc
