@@ -189,7 +189,9 @@ func (c *Castle) FilterActivities(a types.ActivityFilterPayload) ([]*types.Activ
 			(activity.basePrice <= COALESCE(NULLIF(?, 0), activity.basePrice)) AND
 			(activity.averageRating >= COALESCE(NULLIF(?, 0), activity.averageRating)) AND
 			(activity.averageRating <= COALESCE(NULLIF(?, 0), activity.averageRating)) AND
-			(user.username LIKE COALESCE(NULLIF(?, ''), user.username))`
+			(user.username LIKE COALESCE(NULLIF(?, ''), user.username)) AND
+			(activity.creationDate >= COALESCE(NULLIF(?, '1970-01-01'), activity.creationDate)) AND
+			(activity.creationDate <= COALESCE(NULLIF(?, '9999-12-31'), activity.creationDate))`
 
 	// If category ID is found, add a filter for it
 	if a.Category != "" {
@@ -204,6 +206,8 @@ func (c *Castle) FilterActivities(a types.ActivityFilterPayload) ([]*types.Activ
 		a.MinRating,             // Minimum rating filter
 		a.MaxRating,             // Maximum rating filter
 		"%" + a.Organizer + "%", // Partial match for organizer (user) name
+		a.StartDate,             // Start date for creationDate filter
+		a.EndDate,               // End date for creationDate filter
 	}
 
 	// Add the category ID as a parameter only if it's provided

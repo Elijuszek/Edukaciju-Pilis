@@ -150,6 +150,8 @@ type ActivityFilterPayload struct {
 	MinRating int     `json:"minRating" validate:"min=1,max=5" example:"1"`
 	MaxRating int     `json:"maxRating" validate:"min=1,max=5" example:"5"`
 	Organizer string  `json:"organizer" example:"user"`
+	StartDate string  `json:"startDate" example:"2023-01-01T00:00:00Z"`
+	EndDate   string  `json:"endDate" example:"2023-12-31T23:59:59Z"`
 }
 
 // CreatePackagePayload represents the payload for creating packages.

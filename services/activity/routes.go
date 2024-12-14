@@ -355,6 +355,22 @@ func (h *Handler) handleFilterActivities(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
+	// New: Extract startDate and endDate query parameters
+	payload.StartDate = r.URL.Query().Get("startDate")
+	payload.EndDate = r.URL.Query().Get("endDate")
+
+	// TODO: Validate the date format
+	// Optionally validate the date format
+	// Uncomment and implement if you have a utility function for date validation
+	// if payload.StartDate != "" && !utils.IsValidDate(payload.StartDate) {
+	// 	utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid startDate"))
+	// 	return
+	// }
+	// if payload.EndDate != "" && !utils.IsValidDate(payload.EndDate) {
+	// 	utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid endDate"))
+	// 	return
+	// }
+
 	// Validate the payload (if needed)
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
