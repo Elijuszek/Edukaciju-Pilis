@@ -258,7 +258,7 @@ func (c *Castle) CreateOrganizer(organizer types.Organizer) error {
 	return nil
 }
 
-func (c *Castle) CreateAdministrator(admin types.Administrator) error {
+func (c *Castle) CreateAdministrator(admin types.CreateAdministratorPayload) error {
 	_, err := c.db.Exec("INSERT INTO administrator (id, securityLevel) VALUES (?,?)", admin.ID,
 		admin.SecurityLevel)
 	if err != nil {

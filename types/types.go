@@ -188,7 +188,7 @@ type UserCastle interface {
 	ListUsers() ([]*User, error)
 
 	CreateOrganizer(Organizer) error
-	CreateAdministrator(Administrator) error
+	CreateAdministrator(CreateAdministratorPayload) error
 }
 
 type ActivityCastle interface {

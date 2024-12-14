@@ -30,7 +30,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 	router.HandleFunc("/users", auth.WithJWTAuth(h.handleListUsers, h.castle, "administrator")).Methods("GET")
 
-	router.HandleFunc("/users/{userID:[0-9]+}", auth.WithJWTAuth(h.handleGetUser, h.castle, "administrator", "organizer", "user")).Methods(("GET"))
+	router.HandleFunc("/users/{userID:[0-9]+}", auth.WithJWTAuth(h.handleGetUser, h.castle, "administrator", "organizer", "user")).Methods("GET", "OPTIONS") // TODO: Check if correct
 	router.HandleFunc("/users/update/{userID:[0-9]+}", auth.WithJWTAuth(h.handleUpdateUser, h.castle, "administrator", "organizer", "user")).Methods("PUT", "OPTIONS")
 	router.HandleFunc("/users/delete/{userID:[0-9]+}", auth.WithJWTAuth(h.handleDeleteUser, h.castle, "administrator", "organizer", "user")).Methods("DELETE", "OPTIONS")
 
@@ -467,7 +467,7 @@ func (h *Handler) handleCreateAdministrator(w http.ResponseWriter, r *http.Reque
 	}
 
 	// if it doesnt  create the new user
-	err = h.castle.CreateAdministrator(types.Administrator{
+	err = h.castle.CreateAdministrator(types.CreateAdministratorPayload{
 		ID:            payload.ID,
 		SecurityLevel: payload.SecurityLevel,
 	})
