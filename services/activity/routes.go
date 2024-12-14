@@ -318,7 +318,10 @@ func (h *Handler) handleFilterActivities(w http.ResponseWriter, r *http.Request)
 
 	// Get query parameters and populate the payload
 	payload.Name = r.URL.Query().Get("name")
-	payload.Category = r.URL.Query().Get("Category")
+
+	// TODO: handle category as enum
+	// payload.Category = r.URL.Query().Get("Category")
+	payload.Category = ""
 	payload.Organizer = r.URL.Query().Get("Organizer")
 
 	// Convert string parameters to integers
