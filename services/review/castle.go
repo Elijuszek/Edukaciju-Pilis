@@ -99,8 +99,8 @@ func (c *Castle) GetReviewFromActivityByID(idActivity int, idUser int) (*types.R
 }
 
 func (c *Castle) CreateReview(review types.Review) error {
-	_, err := c.db.Exec("INSERT INTO review (date, comment, rating, fk_Userid, fk_Activityid) VALUES (?,?,?,?,?)",
-		review.Date, review.Comment, review.Rating, review.FkUserID, review.FkActivityID)
+	_, err := c.db.Exec("INSERT INTO review (comment, rating, fk_Userid, fk_Activityid) VALUES (?,?,?,?,?)",
+		review.Comment, review.Rating, review.FkUserID, review.FkActivityID)
 	if err != nil {
 		return err
 	}

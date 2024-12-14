@@ -89,7 +89,7 @@ type EntityImage struct {
 	ID         int    `json:"id" exapmle:"1"`
 	EntityType string `json:"entityType" exapmle:"activity"`
 	FkEntity   int    `json:"fk_entity" exapmle:"1"`
-	FkImageID  int    `json:"fk_Imageid" exapmle:" example:"1"`
+	FkImageID  int    `json:"fk_Imageid" example:"1"`
 }
 
 type Category string
