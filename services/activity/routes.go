@@ -81,15 +81,10 @@ func (h *Handler) handleListActivities(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /packages/activities [get]
 func (h *Handler) handleListActivitiesInPackage(w http.ResponseWriter, r *http.Request) {
-	packageIDStr := r.URL.Query().Get("packageID")
-	if packageIDStr == "" {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing packageID"))
-		return
-	}
-
-	packageID, err := strconv.Atoi(packageIDStr)
+	vars := mux.Vars(r)
+	packageID, err := strconv.Atoi(vars["packageID"])
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("error with payload"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing packageID"))
 		return
 	}
 
