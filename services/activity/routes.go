@@ -38,7 +38,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 	router.HandleFunc("/packages", h.handleListPackages).Methods("GET")
 	router.HandleFunc("/organizer/{organizerID:[0-9]+}/packages", h.handleListPackagesByOrganizer).Methods("GET")
-	router.HandleFunc("/packages/activities", h.handleListActivitiesInPackage).Methods("GET")
+	router.HandleFunc("/packages/{packageID:[0-9]+}/activities", h.handleListActivitiesInPackage).Methods("GET")
 	router.HandleFunc("/packages/create", auth.WithJWTAuth(h.handleCreatePackage, h.userCastle, "administrator", "organizer")).Methods("POST", "OPTIONS")
 	router.HandleFunc("/packages/delete/{packageID:[0-9]+}", auth.WithJWTAuth(h.handleDeletePackage, h.userCastle, "administrator", "organizer")).Methods("DELETE", "OPTIONS")
 
