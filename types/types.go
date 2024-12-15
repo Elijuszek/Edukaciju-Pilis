@@ -209,6 +209,7 @@ type ActivityCastle interface {
 	ListPackagesByOrganizerID(organizerID int) ([]*Package, error)
 	CreatePackage(p Package) (int64, error)
 	DeletePackage(id int) error
+	UpdatePackage(p Package) error
 	GetPackageByName(name string) (*Package, error)
 }
 

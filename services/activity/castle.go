@@ -371,6 +371,17 @@ func (c *Castle) ListPackagesByOrganizerID(organizerID int) ([]*types.Package, e
 	return packages, nil
 }
 
+func (c *Castle) UpdatePackage(p types.Package) error {
+	_, err := c.db.Exec(
+		"UPDATE package SET name = ?, description = ?, price = ?, fk_Organizerid = ? WHERE packageID = ?",
+		p.Name, p.Description, p.Price, p.FkOrganizerID, p.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Castle) DeletePackage(id int) error {
 	_, err := c.db.Exec(
 		"DELETE FROM package WHERE id = ?", id)

@@ -40,6 +40,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/organizer/{organizerID:[0-9]+}/packages", h.handleListPackagesByOrganizer).Methods("GET")
 	router.HandleFunc("/packages/{packageID:[0-9]+}/activities", h.handleListActivitiesInPackage).Methods("GET")
 	router.HandleFunc("/packages/create", auth.WithJWTAuth(h.handleCreatePackage, h.userCastle, "administrator", "organizer")).Methods("POST", "OPTIONS")
+	router.HandleFunc("/packages/update", auth.WithJWTAuth(h.handleUpdatePackage, h.userCastle, "administrator", "organizer")).Methods("PUT", "OPTIONS")
 	router.HandleFunc("/packages/delete/{packageID:[0-9]+}", auth.WithJWTAuth(h.handleDeletePackage, h.userCastle, "administrator", "organizer")).Methods("DELETE", "OPTIONS")
 
 }
@@ -572,6 +573,67 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, response)
+}
+
+// UpdatePackage godoc
+// @Summary      Update an existing package
+// @Description  Update an existing package with the given name, description, price, and organizer ID
+// @Tags         package
+// @Produce      json
+// @Param        payload body types.UpdatePackagePayload true "Package data"
+// @Success      200  {object}   types.ErrorResponse "Package %s successfully updated"
+// @Failure      400  {object}   types.ErrorResponse "Invalid payload"
+// @Failure      404  {object}   types.ErrorResponse "Package with ID %d not found"
+// @Failure      500  {object}   types.ErrorResponse "Internal server error"
+// @Router       /packages/update [put]
+func (h *Handler) handleUpdatePackage(w http.ResponseWriter, r *http.Request) {
+	// get JSON payload
+	var payload types.Package
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+		return
+	}
+
+	// check if the package exists
+	pkg, err := h.activityCastle.GetPackageByID(payload.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("package with ID %d not found", payload.ID))
+		return
+	}
+
+	// Check if the user has ownership of the resource
+	if !auth.CheckOwnership(r, pkg.FkOrganizerID) {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
+		return
+	}
+
+	// Update the package
+	err = h.activityCastle.UpdatePackage(types.Package{
+		ID:            payload.ID,
+		Name:          payload.Name,
+		Description:   payload.Description,
+		Price:         payload.Price,
+		FkOrganizerID: payload.FkOrganizerID,
+	})
+
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	response := map[string]interface{}{
+		"package_id": payload.ID,
+		"message":    fmt.Sprintf("Package with ID %d updated successfully", payload.ID),
+	}
+
+	utils.WriteJSON(w, http.StatusOK, response)
 }
 
 // DeletePackage godoc
