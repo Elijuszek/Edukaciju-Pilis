@@ -162,7 +162,7 @@ func (c *Castle) GetActivityInsidePackageByName(activityName string, packageID i
 
 func (c *Castle) UpdateActivity(activity types.Activity) error {
 	var categoryID int
-	err := c.db.QueryRow("SELECT id_Category FROM category WHERE name = ?", activity.Category).Scan(&categoryID)
+	err := c.db.QueryRow("SELECT id_Category FROM category WHERE id = ?", activity.Category).Scan(&categoryID)
 	if err != nil {
 		return fmt.Errorf("failed to find category '%s': %v", activity.Category, err)
 	}
