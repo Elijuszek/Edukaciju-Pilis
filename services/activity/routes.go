@@ -604,7 +604,7 @@ func (h *Handler) handleDeletePackage(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the user has ownership of the resource
 	if !auth.CheckOwnership(r, activityPackage.FkOrganizerID) {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized"))
 		return
 	}
 
