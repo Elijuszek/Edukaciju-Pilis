@@ -554,7 +554,7 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// if not create
-	err = h.activityCastle.CreatePackage(types.Package{
+	packageID, err := h.activityCastle.CreatePackage(types.Package{
 		Name:          payload.Name,
 		Description:   payload.Description,
 		Price:         payload.Price,
@@ -566,7 +566,12 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, fmt.Sprintf("Package  %s successfully created", payload.Name))
+	response := map[string]interface{}{
+		"package_id": packageID,
+		"message":    fmt.Sprintf("Package with ID %d created successfully", packageID),
+	}
+
+	utils.WriteJSON(w, http.StatusCreated, response)
 }
 
 // DeletePackage godoc
