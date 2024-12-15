@@ -580,7 +580,7 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /packages/delete/{packageID} [delete]
 func (h *Handler) handleDeletePackage(w http.ResponseWriter, r *http.Request) {
-	// Get the review ID from the URL parameters
+	// Get the package ID from the URL parameters
 	vars := mux.Vars(r)
 	str, ok := vars["packageID"]
 	if !ok {
@@ -597,8 +597,8 @@ func (h *Handler) handleDeletePackage(w http.ResponseWriter, r *http.Request) {
 
 	// check if the package exists
 	activityPackage, err := h.activityCastle.GetPackageByID(packageID)
-	if err == nil {
-		utils.WriteError(w, http.StatusUnprocessableEntity, fmt.Errorf("package with id %d already exists", packageID))
+	if err != nil {
+		utils.WriteError(w, http.StatusUnprocessableEntity, fmt.Errorf("package with id %d doesn't exists", packageID))
 		return
 	}
 
