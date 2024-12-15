@@ -40,7 +40,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/organizer/{organizerID:[0-9]+}/packages", h.handleListPackagesByOrganizer).Methods("GET")
 	router.HandleFunc("/packages/{packageID:[0-9]+}/activities", h.handleListActivitiesInPackage).Methods("GET")
 	router.HandleFunc("/packages/create", auth.WithJWTAuth(h.handleCreatePackage, h.userCastle, "administrator", "organizer")).Methods("POST", "OPTIONS")
-	router.HandleFunc("/packages/update", auth.WithJWTAuth(h.handleUpdatePackage, h.userCastle, "administrator", "organizer")).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/packages/update/{packageID:[0-9]+}", auth.WithJWTAuth(h.handleUpdatePackage, h.userCastle, "administrator", "organizer")).Methods("PUT", "OPTIONS")
 	router.HandleFunc("/packages/delete/{packageID:[0-9]+}", auth.WithJWTAuth(h.handleDeletePackage, h.userCastle, "administrator", "organizer")).Methods("DELETE", "OPTIONS")
 
 }
@@ -587,6 +587,21 @@ func (h *Handler) handleCreatePackage(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}   types.ErrorResponse "Internal server error"
 // @Router       /packages/update [put]
 func (h *Handler) handleUpdatePackage(w http.ResponseWriter, r *http.Request) {
+	// Extract the package ID from the URL
+	vars := mux.Vars(r)
+	idStr, ok := vars["packageID"]
+	if !ok {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("package ID is required"))
+		return
+	}
+
+	// Convert package ID to an integer
+	packageID, err := strconv.Atoi(idStr)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid package ID"))
+		return
+	}
+
 	// get JSON payload
 	var payload types.Package
 	if err := utils.ParseJSON(r, &payload); err != nil {
@@ -602,9 +617,9 @@ func (h *Handler) handleUpdatePackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the package exists
-	pkg, err := h.activityCastle.GetPackageByID(payload.ID)
+	pkg, err := h.activityCastle.GetPackageByID(packageID) // Convert to int64 if required by your database method
 	if err != nil {
-		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("package with ID %d not found", payload.ID))
+		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("package with ID %d not found", packageID))
 		return
 	}
 
@@ -616,7 +631,7 @@ func (h *Handler) handleUpdatePackage(w http.ResponseWriter, r *http.Request) {
 
 	// Update the package
 	err = h.activityCastle.UpdatePackage(types.Package{
-		ID:            payload.ID,
+		ID:            packageID, // Convert to int64 if required by your types.Package struct
 		Name:          payload.Name,
 		Description:   payload.Description,
 		Price:         payload.Price,
@@ -629,8 +644,8 @@ func (h *Handler) handleUpdatePackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"package_id": payload.ID,
-		"message":    fmt.Sprintf("Package with ID %d updated successfully", payload.ID),
+		"package_id": packageID,
+		"message":    fmt.Sprintf("Package with ID %d updated successfully", packageID),
 	}
 
 	utils.WriteJSON(w, http.StatusOK, response)
