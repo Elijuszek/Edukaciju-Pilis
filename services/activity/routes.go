@@ -603,12 +603,7 @@ func (h *Handler) handleDeletePackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the user has ownership of the resource
-	organizer, err := h.userCastle.GetOrganizerByActivityID(activityPackage.FkOrganizerID)
-	if err != nil {
-		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
-		return
-	}
-	if !auth.CheckOwnership(r, organizer.ID) {
+	if !auth.CheckOwnership(r, activityPackage.FkOrganizerID) {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
 		return
 	}

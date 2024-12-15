@@ -116,3 +116,7 @@ func (m *mockUserCastle) CreateAdministrator(types.CreateAdministratorPayload) e
 func (m *mockUserCastle) GetOrganizerByActivityID(id int) (*types.Organizer, error) {
 	return nil, nil
 }
+
+func (m *mockUserCastle) GetOrganizerByPackageID(id int) (*types.Organizer, error) {
+	return nil, nil
+}

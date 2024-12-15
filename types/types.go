@@ -182,6 +182,7 @@ type UserCastle interface {
 
 	GetOrganizerByID(id int) (*Organizer, error)
 	GetOrganizerByActivityID(activityID int) (*Organizer, error)
+	GetOrganizerByPackageID(packageID int) (*Organizer, error)
 	GetUserByUsername(username string) (*User, error)
 	GetUserByEmail(email string) (*User, error)
 	CreateUser(User) error
