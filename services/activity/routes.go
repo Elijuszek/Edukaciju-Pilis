@@ -37,6 +37,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/activities/filter", h.handleFilterActivities).Methods(("GET"))
 
 	router.HandleFunc("/packages", h.handleListPackages).Methods("GET")
+	router.HandleFunc("/packages/{packageID:[0-9]+}", h.handleGetPackage).Methods("GET")
 	router.HandleFunc("/organizer/{organizerID:[0-9]+}/packages", h.handleListPackagesByOrganizer).Methods("GET")
 	router.HandleFunc("/packages/{packageID:[0-9]+}/activities", h.handleListActivitiesInPackage).Methods("GET")
 	router.HandleFunc("/packages/create", auth.WithJWTAuth(h.handleCreatePackage, h.userCastle, "administrator", "organizer")).Methods("POST", "OPTIONS")
@@ -515,6 +516,33 @@ func (h *Handler) handleListPackagesByOrganizer(w http.ResponseWriter, r *http.R
 
 	// Return the packages as a JSON response
 	utils.WriteJSON(w, http.StatusOK, packages)
+}
+
+func (h *Handler) handleGetPackage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	str, ok := vars["packageID"]
+	if !ok {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid package ID"))
+		return
+	}
+
+	packageID, err := strconv.Atoi(str)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing or invalid package ID"))
+		return
+	}
+
+	pkg, err := h.activityCastle.GetPackageByID(packageID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			utils.WriteError(w, http.StatusNotFound, fmt.Errorf("package not found"))
+		} else {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+		}
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, pkg)
 }
 
 // CreatePackage godoc
