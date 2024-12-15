@@ -270,6 +270,7 @@ func (h *Handler) handleUpdateActivity(w http.ResponseWriter, r *http.Request) {
 	organizer, err := h.userCastle.GetOrganizerByActivityID(existingActivity.ID)
 	if err != nil {
 		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
+		return
 	}
 	if !auth.CheckOwnership(r, organizer.ID) {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
