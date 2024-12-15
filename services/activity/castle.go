@@ -265,15 +265,22 @@ func (c *Castle) FilterActivities(a types.ActivityFilterPayload) ([]*types.Activ
 	return activities, nil
 }
 
-func (c *Castle) CreatePackage(p types.Package) error {
-	_, err := c.db.Exec(
+func (c *Castle) CreatePackage(p types.Package) (int64, error) {
+	// Execute the SQL query and get the result
+	result, err := c.db.Exec(
 		"INSERT INTO package (name, description, price, fk_Organizerid) VALUES (?,?,?,?)",
 		p.Name, p.Description, p.Price, p.FkOrganizerID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	// Get the last inserted ID
+	packageID, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return packageID, nil
 }
 
 func (c *Castle) GetPackageByID(id int) (*types.Package, error) {
