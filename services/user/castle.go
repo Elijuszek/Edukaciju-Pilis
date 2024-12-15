@@ -132,8 +132,8 @@ func (c *Castle) GetOrganizerByActivityID(activityID int) (*types.Organizer, err
 	query := `
     SELECT o.*
     FROM organizer o
-    JOIN package p ON o.ID = p.FkOrganizerId
-    JOIN activity a ON p.ID = a.FkPackageId
+    JOIN package p ON o.ID = p.fk_Organizerid
+    JOIN activity a ON p.ID = a.fk_Packageid
     WHERE a.ID = ?`
 
 	rows, err := c.db.Query(query, activityID)
