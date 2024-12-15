@@ -606,9 +606,11 @@ func (h *Handler) handleDeletePackage(w http.ResponseWriter, r *http.Request) {
 	organizer, err := h.userCastle.GetOrganizerByActivityID(activityPackage.FkOrganizerID)
 	if err != nil {
 		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
+		return
 	}
 	if !auth.CheckOwnership(r, organizer.ID) {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
+		return
 	}
 
 	// delete package
