@@ -157,7 +157,7 @@ func (h *Handler) handleCreateActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.activityCastle.CreateActivity(types.Activity{
+	err = h.activityCastle.CreateActivity(types.ActivityPayload{
 		Name:        payload.Name,
 		Description: payload.Description,
 		BasePrice:   payload.BasePrice,

@@ -103,7 +103,7 @@ func (c *Castle) ListActivitiesInPackage(packageID int) ([]*types.Activity, erro
 	return activities, nil
 }
 
-func (c *Castle) CreateActivity(activity types.Activity) error {
+func (c *Castle) CreateActivity(activity types.ActivityPayload) error {
 	var categoryID int
 	err := c.db.QueryRow("SELECT id_Category FROM category WHERE name = ?", activity.Category).Scan(&categoryID)
 	if err != nil {

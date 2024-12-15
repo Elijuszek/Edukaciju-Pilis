@@ -135,9 +135,9 @@ type LoginUserPayload struct {
 // swagger:model
 type ActivityPayload struct {
 	Name        string  `json:"name" validate:"required" example:"Amber history"`
-	Description string  `json:"description" validate:"required" example:"Educations about amber"`
+	Description string  `json:"description" validate:"required" example:"Education about amber"`
 	BasePrice   float32 `json:"basePrice" validate:"required" example:"15.50"`
-	Hidden      bool    `json:"hidden" validate:"required" example:"1"`
+	Hidden      bool    `json:"hidden" example:"true"`
 	Category    string  `json:"category" validate:"required" example:"Education"`
 	FkPackageID int     `json:"fk_Packageid" validate:"required" example:"1"`
 }
@@ -195,7 +195,7 @@ type UserCastle interface {
 }
 
 type ActivityCastle interface {
-	CreateActivity(Activity) error
+	CreateActivity(ActivityPayload) error
 	GetActivityByID(id int) (*Activity, error)
 	UpdateActivity(Activity) error
 	DeleteActivity(id int) error
