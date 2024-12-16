@@ -263,8 +263,8 @@ func (h *Handler) handleUpdateActivity(w http.ResponseWriter, r *http.Request) {
 			// utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity not found"))
 		} else {
 			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
 		}
-		return
 	} else {
 		organizer, err := h.userCastle.GetOrganizerByActivityID(existingActivity.ID)
 		if err != nil {
