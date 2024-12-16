@@ -39,6 +39,7 @@ Sistemos paskirtis
 
 2. Frontend technologijos:
    - React.js
+   - Tailwind.css
 
 
 ### 3. Pagrindiniai objektai:
@@ -164,16 +165,33 @@ class Category {
 
 ```
 ### 5. Naudotojo sąsajos projektas (wireframe)
+![Alt text](https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/1.png)
+![Alt text](https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/2.png)
+![Alt text](https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/3.png)
 
 
 ### 6. Sistemos dizainas
-1. **Sistemos langai**
+### 1. **Sistemos langai**
 
-2. **Modaliniai langai**
+![Alt text](https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/Page1.PNG)
+![Alt text](https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/Page2.PNG)
+![Alt text](https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/Page3.PNG)
+![Alt text](https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/Page4.PNG)
+
+### 2. **Modaliniai langai**
+
+|  |  |  |
+|---|---|---|
+| <img src="https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/Login.PNG" width="300"> | <img src="https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/Register.PNG" width="300"> | <img src="https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/Create.PNG" width="300"> |
+| **Login** | **Register** | **Create** |
+| <img src="https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/Update.PNG" width="300"> | <img src="https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/Profile.PNG" width="300"> |  |
+| **Update** | **Profile** |  |
 
 ### 7. UML "Deployment" Diagrama
+![Alt text](https://github.com/Elijuszek/Edukaciju-Pilis/blob/main/wireframes/Deploy.jpg)
 
 ### 8. „OpenAPI" specifikacija
+[https://educations-castle-sunch.ondigitalocean.app/swagger/index.html](https://educations-castle-sunch.ondigitalocean.app/swagger/index.html)
 
 ### 9. Išvados
 Projektas „Edukacijų Pilis“ apima internetinę skelbimų sistemą, skirtą edukacinių renginių organizavimui, naudojant „Golang“ backend ir „React.js“ frontend technologijas. Komponentai yra talpinami „Docker“ konteineriuose.
