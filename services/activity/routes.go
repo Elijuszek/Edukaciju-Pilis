@@ -260,22 +260,21 @@ func (h *Handler) handleUpdateActivity(w http.ResponseWriter, r *http.Request) {
 	existingActivity, err := h.activityCastle.GetActivityByID(activityID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity not found"))
+			// utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity not found"))
 		} else {
 			utils.WriteError(w, http.StatusInternalServerError, err)
 		}
 		return
-	}
-
-	// Check if the user has ownership of the resource
-	organizer, err := h.userCastle.GetOrganizerByActivityID(existingActivity.ID)
-	if err != nil {
-		utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
-		return
-	}
-	if !auth.CheckOwnership(r, organizer.ID) {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
-		return
+	} else {
+		organizer, err := h.userCastle.GetOrganizerByActivityID(existingActivity.ID)
+		if err != nil {
+			utils.WriteError(w, http.StatusNotFound, fmt.Errorf("activity organizer not found"))
+			return
+		}
+		if !auth.CheckOwnership(r, organizer.ID) {
+			utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("permission denied"))
+			return
+		}
 	}
 
 	// Update the review
