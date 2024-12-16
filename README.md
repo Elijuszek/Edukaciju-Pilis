@@ -212,3 +212,6 @@ Naudojamos technologijos užtikrina funkcionalumą ir sistemos suderinamumą ski
 ### 10. Nuorodos
 - **Front-end**:
 [https://github.com/Elijuszek/educations-castle-client](https://github.com/Elijuszek/educations-castle-client)
+- **"Educations Castle" puslapis:**
+[https://github.com/Elijuszek/educations-castle-client](https://starfish-app-qhaae.ondigitalocean.app/)
+
