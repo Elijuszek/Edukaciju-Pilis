@@ -1,8 +1,7 @@
 # T120B165-Web-Application-Design
 
 ## Edukacijų Pilis
-
-### Uždavinio aprašymas
+### 1. Uždavinio aprašymas
 Edukaciju Pilis - skelbimų sistema skirta organizatoriams skelbti skelbimus apie edukacinius renginius ir kitas veiklas.
 
 Sistemos paskirtis
@@ -11,7 +10,7 @@ Sistemos paskirtis
 - Leisti renginių dalyviams rašyti atsiliepimus ir įvertinimus.
 - Leisti organizatoriams pridėti skelbimus apie naujus renginius ir veiklas.
 
-### Funkciniai reikalavimai
+### 2. Funkciniai reikalavimai
 
 1. **Svečio funkcijos:**
     - Peržiūrėti temas
@@ -42,7 +41,7 @@ Sistemos paskirtis
    - React.js
 
 
-### Pagrindiniai objektai:
+### 3. Pagrindiniai objektai:
 
 1. **Tema**
     - Pavadinimas
@@ -59,7 +58,7 @@ Sistemos paskirtis
     - Aprašymas
     - Kaina
     - Kontaktai
-3. **Atsiliepimas**
+4. **Atsiliepimas**
     - Data
     - Komentaras
     - Įvertinimas
@@ -73,7 +72,7 @@ Sistemos paskirtis
 - **Organizatorius**: gali skelbti skelbimus, temas ir sudaryti paketus.
 - **Administratorius**: turi visas valdymo funkcijas, įskaitant vartotojų administravimą, skelbimų ir temų priežiūrą.
 
-### Klasių diagrama:
+### 4. Klasių diagrama:
 
 ```mermaid
 classDiagram
@@ -164,3 +163,34 @@ class Category {
 }
 
 ```
+### 5. Naudotojo sąsajos projektas (wireframe)
+
+
+### 6. Sistemos dizainas
+1. **Sistemos langai**
+
+2. **Modaliniai langai**
+
+### 7. UML "Deployment" Diagrama
+
+### 8. „OpenAPI" specifikacija
+
+### 9. Išvados
+Projektas „Edukacijų Pilis“ apima internetinę skelbimų sistemą, skirtą edukacinių renginių organizavimui, naudojant „Golang“ backend ir „React.js“ frontend technologijas. Komponentai yra talpinami „Docker“ konteineriuose.
+
+Komponentai:
+- Backend: „Golang“ ir MariaDB su JWT autentifikacija.
+- Frontend: „React.js“ sąsaja.
+
+Funkcionalumas:
+- Svečiams: Peržiūra skelbimų, naujienlaiškio prenumerata.
+- Vartotojams: Atsiliepimų ir įvertinimų palikimas.
+- Organizatoriams: Skelbimų valdymas.
+- Administratoriams: Paskyrų ir skelbimų priežiūra.
+
+Privalumai:
+Naudojamos technologijos užtikrina funkcionalumą ir sistemos suderinamumą skirtingose aplinkose, kuriant patrauklią naudotojo sąsają ir veiksmingą duomenų valdymą.
+
+### 10. Nuorodos
+- **Front-end**:
+[https://github.com/Elijuszek/educations-castle-client](https://github.com/Elijuszek/educations-castle-client)
