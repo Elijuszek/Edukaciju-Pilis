@@ -161,11 +161,32 @@ func (c *Castle) GetActivityInsidePackageByName(activityName string, packageID i
 }
 
 func (c *Castle) UpdateActivity(activity types.Activity) error {
+	// Check if the activity exists
+	var existingActivityID int
+	err := c.db.QueryRow("SELECT id FROM activity WHERE id = ?", activity.ID).Scan(&existingActivityID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Activity doesn't exist, call CreateActivity
+			return c.CreateActivity(types.ActivityPayload{
+				Name:        activity.Name,
+				Description: activity.Description,
+				BasePrice:   activity.BasePrice,
+				Hidden:      activity.Hidden,
+				Category:    activity.Category,
+				FkPackageID: activity.FkPackageID,
+			})
+		}
+		return fmt.Errorf("failed to check existence of activity '%d': %v", activity.ID, err)
+	}
+
+	// Find the category ID
 	var categoryID int
-	err := c.db.QueryRow("SELECT id_Category FROM category WHERE id_Category = ?", activity.Category).Scan(&categoryID)
+	err = c.db.QueryRow("SELECT id_Category FROM category WHERE id_Category = ?", activity.Category).Scan(&categoryID)
 	if err != nil {
 		return fmt.Errorf("failed to find category '%s': %v", activity.Category, err)
 	}
+
+	// Update the existing activity
 	_, err = c.db.Exec(
 		`UPDATE activity 
 		SET name = ?, description = ?, basePrice = ?, hidden = ?, category = ?, fk_Packageid = ? 
